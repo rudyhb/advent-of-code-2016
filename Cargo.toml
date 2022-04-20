@@ -10,3 +10,4 @@ utils = { git = "https://github.com/rudyhb/utils.git" }
 lazy_static = "1.4.0"
 rayon = "1.5.1"
 regex = "1.5.4"
+md5 = "0.7.0"
