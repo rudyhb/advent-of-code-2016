@@ -80,7 +80,7 @@ impl From<&'static str> for Room {
         let id = s.split('-').last().unwrap();
         let s = &s[..s.len() - id.len() - 1];
         Self {
-            most_common_letters: [common_letters[0], common_letters[1], common_letters[2], common_letters[3], common_letters[4]],
+            most_common_letters: common_letters.try_into().unwrap(),
             sector_id: id.parse().unwrap(),
             encrypted_name: s,
         }
