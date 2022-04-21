@@ -7,13 +7,14 @@ mod day4_security_through_obscurity;
 mod day5_game_of_chess;
 mod day6_signals_and_noise;
 mod day7_internet_protocol_v7;
+mod day8_two_factor_authentication;
 
 fn main() {
     let _timer = Timer::start(|elapsed| println!("main took {} ms.", elapsed.as_millis()));
     let day: usize = if let Some(arg1) = std::env::args().nth(1) {
         arg1.parse().expect("argument should be an integer")
     } else {
-        7
+        8
     };
     println!("running day {}\n", day);
     match day {
@@ -24,6 +25,7 @@ fn main() {
         5 => day5_game_of_chess::run(),
         6 => day6_signals_and_noise::run(),
         7 => day7_internet_protocol_v7::run(),
+        8 => day8_two_factor_authentication::run(),
         _ => panic!("day {} not found", day)
     }
 }
