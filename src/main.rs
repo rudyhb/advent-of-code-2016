@@ -10,13 +10,14 @@ mod day7_internet_protocol_v7;
 mod day8_two_factor_authentication;
 mod day9_explosives_in_cyberspace;
 mod day10_balance_bots;
+mod day11_radioisotope_thermoelectric_generators;
 
 fn main() {
     let _timer = Timer::start(|elapsed| println!("main took {} ms.", elapsed.as_millis()));
     let day: usize = if let Some(arg1) = std::env::args().nth(1) {
         arg1.parse().expect("argument should be an integer")
     } else {
-        10
+        11
     };
     println!("running day {}\n", day);
     match day {
@@ -30,6 +31,7 @@ fn main() {
         8 => day8_two_factor_authentication::run(),
         9 => day9_explosives_in_cyberspace::run(),
         10 => day10_balance_bots::run(),
+        11 => day11_radioisotope_thermoelectric_generators::run(),
         _ => panic!("day {} not found", day)
     }
 }
