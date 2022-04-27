@@ -13,13 +13,14 @@ mod day10_balance_bots;
 mod day11_radioisotope_thermoelectric_generators;
 mod day12_leonardos_monorail;
 mod day13_a_maze_of_twisty_little_cubicles;
+mod day14_one_time_pad;
 
 fn main() {
     let _timer = Timer::start(|elapsed| println!("main took {} ms.", elapsed.as_millis()));
     let day: usize = if let Some(arg1) = std::env::args().nth(1) {
         arg1.parse().expect("argument should be an integer")
     } else {
-        13
+        14
     };
     println!("running day {}\n", day);
     match day {
@@ -36,6 +37,7 @@ fn main() {
         11 => day11_radioisotope_thermoelectric_generators::run(),
         12 => day12_leonardos_monorail::run(),
         13 => day13_a_maze_of_twisty_little_cubicles::run(),
+        14 => day14_one_time_pad::run(),
         _ => panic!("day {} not found", day)
     }
 }
