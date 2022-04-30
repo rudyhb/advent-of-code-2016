@@ -6,10 +6,7 @@ pub(crate) fn run() {
     // let end = Coord { x: 7, y: 4 };
     let end = Coord { x: 31, y: 39 };
 
-    // let options = AStarOptions::print_stats();
-    // let options = Some(&options);
-    let options = None;
-    let solution = a_star_search(start, &end, get_successors, distance_function, options).unwrap();
+    let solution = a_star_search(start, &end, get_successors, distance_function, None).unwrap();
 
     Maze::print(&solution);
     println!("reaching {:?} would take a minimum of {} steps", end, solution.len() - 1);

@@ -34,11 +34,7 @@ The fourth floor contains nothing relevant.";
 
     println!("initial state:{}\n", building);
 
-    // let options = AStarOptions::print_stats_and_values_every(100_000);
-    // let options = Some(&options);
-    let options = None;
-
-    let solution = a_star_search(building, &target, get_successors, distance_function, options).expect("no solution found");
+    let solution = a_star_search(building, &target, get_successors, distance_function, None).expect("no solution found");
     for (i, step) in solution.iter().enumerate().skip(1) {
         println!("step {}:{}\n", i, step);
     }

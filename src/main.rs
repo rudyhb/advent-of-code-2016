@@ -16,6 +16,7 @@ mod day13_a_maze_of_twisty_little_cubicles;
 mod day14_one_time_pad;
 mod day15_timing_is_everything;
 mod day16_dragon_checksum;
+mod day17_two_steps_forward;
 
 fn main() {
     env_logger::init();
@@ -23,7 +24,7 @@ fn main() {
     let day: usize = if let Some(arg1) = std::env::args().nth(1) {
         arg1.parse().expect("argument should be an integer")
     } else {
-        16
+        17
     };
     println!("running day {}\n", day);
     match day {
@@ -43,6 +44,7 @@ fn main() {
         14 => day14_one_time_pad::run(),
         15 => day15_timing_is_everything::run(),
         16 => day16_dragon_checksum::run(),
+        17 => day17_two_steps_forward::run(),
         _ => panic!("day {} not found", day)
     }
 }
