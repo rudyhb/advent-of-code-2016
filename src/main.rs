@@ -15,13 +15,15 @@ mod day12_leonardos_monorail;
 mod day13_a_maze_of_twisty_little_cubicles;
 mod day14_one_time_pad;
 mod day15_timing_is_everything;
+mod day16_dragon_checksum;
 
 fn main() {
+    env_logger::init();
     let _timer = Timer::start(|elapsed| println!("main took {} ms.", elapsed.as_millis()));
     let day: usize = if let Some(arg1) = std::env::args().nth(1) {
         arg1.parse().expect("argument should be an integer")
     } else {
-        15
+        16
     };
     println!("running day {}\n", day);
     match day {
@@ -40,6 +42,7 @@ fn main() {
         13 => day13_a_maze_of_twisty_little_cubicles::run(),
         14 => day14_one_time_pad::run(),
         15 => day15_timing_is_everything::run(),
+        16 => day16_dragon_checksum::run(),
         _ => panic!("day {} not found", day)
     }
 }
