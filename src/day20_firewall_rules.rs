@@ -40,7 +40,7 @@ impl AllowedIpRanges {
             .next().ok_or(anyhow!("could not find left boundary"))?;
         let right = self.0.iter().enumerate().skip(left).filter(|(_, range)| range.end >= blocked.end)
             .map(|(i, _)| i)
-            .next().ok_or(anyhow!("could not find right boundary"))?;
+            .next().unwrap_or(left);
         let mut replace_with: Vec<IpRange> = Vec::with_capacity(2);
         if blocked.start > 0 && blocked.start > self.0[left].start {
             replace_with.push(IpRange {
