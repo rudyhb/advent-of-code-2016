@@ -20,6 +20,7 @@ mod day17_two_steps_forward;
 mod day18_like_a_rogue;
 mod day19_an_elephant_named_joseph;
 mod day20_firewall_rules;
+mod day21_scrambled_letters_and_hash;
 
 fn main() {
     env_logger::init();
@@ -27,7 +28,7 @@ fn main() {
     let day: usize = if let Some(arg1) = std::env::args().nth(1) {
         arg1.parse().expect("argument should be an integer")
     } else {
-        20
+        21
     };
     println!("running day {}\n", day);
     match day {
@@ -51,6 +52,7 @@ fn main() {
         18 => day18_like_a_rogue::run(),
         19 => day19_an_elephant_named_joseph::run(),
         20 => day20_firewall_rules::run(),
+        21 => day21_scrambled_letters_and_hash::run(),
         _ => panic!("day {} not found", day)
     }
 }
