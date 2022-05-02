@@ -11,7 +11,14 @@ totally-real-room-200[decoy]";
 
     let rooms: Vec<Room> = _input.split('\n').map(|line| line.into()).collect();
 
-    println!("sum real ids: {}", rooms.iter().filter(|r| r.is_real()).map(|r| r.sector_id).sum::<u32>());
+    println!(
+        "sum real ids: {}",
+        rooms
+            .iter()
+            .filter(|r| r.is_real())
+            .map(|r| r.sector_id)
+            .sum::<u32>()
+    );
 
     let room: Room = "qzmt-zixmtkozy-ivhz-343[abcde]".into();
     assert_eq!(room.get_real_name().as_str(), "very encrypted name");
@@ -21,7 +28,11 @@ totally-real-room-200[decoy]";
         room.print();
     }
 
-    let north_pole = rooms.iter().filter(|r| r.get_real_name().contains("northpole")).next().unwrap();
+    let north_pole = rooms
+        .iter()
+        .filter(|r| r.get_real_name().contains("northpole"))
+        .next()
+        .unwrap();
     println!("north pole room:");
     north_pole.print();
 }
@@ -35,7 +46,9 @@ struct Room {
 
 impl Room {
     fn get_counts(&self) -> HashMap<char, usize> {
-        self.encrypted_name.chars().filter(|&c| c != '-')
+        self.encrypted_name
+            .chars()
+            .filter(|&c| c != '-')
             .fold(HashMap::new(), |mut map, c| {
                 *map.entry(c).or_default() += 1;
                 map
@@ -55,9 +68,10 @@ impl Room {
             }
         });
 
-        self.most_common_letters.iter().enumerate().all(|(i, c)| {
-            *c == counts[i].0
-        })
+        self.most_common_letters
+            .iter()
+            .enumerate()
+            .all(|(i, c)| *c == counts[i].0)
     }
     pub(crate) fn get_real_name(&self) -> String {
         let map_char = |c: char| {
@@ -65,10 +79,11 @@ impl Room {
             c = ((c as u32 + self.sector_id) % 26) as u8;
             (c + 'a' as u8) as char
         };
-        self.encrypted_name.split('-')
-            .map(|encrypted| {
-                encrypted.chars().map(|c| map_char(c)).collect::<String>()
-            }).collect::<Vec<String>>().join(" ")
+        self.encrypted_name
+            .split('-')
+            .map(|encrypted| encrypted.chars().map(|c| map_char(c)).collect::<String>())
+            .collect::<Vec<String>>()
+            .join(" ")
     }
 }
 

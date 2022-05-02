@@ -9,7 +9,11 @@ pub(crate) fn run() {
     let solution = a_star_search(start, &end, get_successors, distance_function, None).unwrap();
 
     Maze::print(&solution);
-    println!("reaching {:?} would take a minimum of {} steps", end, solution.len() - 1);
+    println!(
+        "reaching {:?} would take a minimum of {} steps",
+        end,
+        solution.len() - 1
+    );
 
     let mut visited: HashMap<Coord, usize> = Default::default();
     let start = Coord { x: 1, y: 1 };
@@ -19,9 +23,15 @@ pub(crate) fn run() {
     println!("{} locations can be visited in 50 steps", visited.len());
 }
 
-fn locations_can_be_visited_in_steps(from: &Coord, visited: &mut HashMap<Coord, usize>, steps_remaining: usize) {
-    for successor in get_successors_internal(from).into_iter()
-        .filter(|coord| !Maze::is_wall(coord)) {
+fn locations_can_be_visited_in_steps(
+    from: &Coord,
+    visited: &mut HashMap<Coord, usize>,
+    steps_remaining: usize,
+) {
+    for successor in get_successors_internal(from)
+        .into_iter()
+        .filter(|coord| !Maze::is_wall(coord))
+    {
         let entry = visited.entry(successor.clone()).or_default();
         if steps_remaining > *entry {
             *entry = steps_remaining;
@@ -36,12 +46,8 @@ fn locations_can_be_visited_in_steps(from: &Coord, visited: &mut HashMap<Coord, 
 fn get_successors_internal(current: &Coord) -> Vec<Coord> {
     (current.y.max(1) - 1..=current.y + 1)
         .map(move |y| Coord { x: current.x, y })
-        .chain((current.x.max(1) - 1..=current.x + 1)
-            .map(move |x| Coord { x, y: current.y }))
-        .filter(|pos| {
-            pos != current &&
-                !Maze::is_wall(&pos)
-        })
+        .chain((current.x.max(1) - 1..=current.x + 1).map(move |x| Coord { x, y: current.y }))
+        .filter(|pos| pos != current && !Maze::is_wall(&pos))
         .collect()
 }
 
@@ -53,7 +59,9 @@ fn get_successors(current: &Coord) -> Vec<Successor<Coord>> {
 }
 
 fn distance_function(details: CurrentNodeDetails<Coord>) -> i32 {
-    details.current_node.manhattan_distance(&details.target_node) as i32
+    details
+        .current_node
+        .manhattan_distance(&details.target_node) as i32
 }
 
 impl AStarNode for Coord {}
@@ -76,16 +84,21 @@ impl Maze {
     fn print(with_path: &[Coord]) {
         let path: HashSet<_> = with_path.into_iter().collect();
         for row in 0..Self::HEIGHT {
-            println!("{}", (0..Self::WIDTH).map(|col| {
-                let coord = Coord { x: col, y: row };
-                if path.contains(&coord) {
-                    'O'
-                } else if Self::is_wall(&coord) {
-                    '#'
-                } else {
-                    '.'
-                }
-            }).collect::<String>());
+            println!(
+                "{}",
+                (0..Self::WIDTH)
+                    .map(|col| {
+                        let coord = Coord { x: col, y: row };
+                        if path.contains(&coord) {
+                            'O'
+                        } else if Self::is_wall(&coord) {
+                            '#'
+                        } else {
+                            '.'
+                        }
+                    })
+                    .collect::<String>()
+            );
         }
     }
 }
@@ -98,8 +111,7 @@ struct Coord {
 
 impl Coord {
     pub(crate) fn manhattan_distance(&self, other: &Self) -> usize {
-        (self.x).abs_diff(other.x) +
-            (self.y).abs_diff(other.y)
+        (self.x).abs_diff(other.x) + (self.y).abs_diff(other.y)
     }
 }
 

@@ -1,6 +1,6 @@
+use lazy_static::lazy_static;
 use std::collections::HashSet;
 use utils::a_star::{a_star_search, AStarNode, CurrentNodeDetails, Successor};
-use lazy_static::lazy_static;
 
 pub(crate) fn run() {
     let _input = "ihgpwlah";
@@ -19,13 +19,22 @@ pub(crate) fn run() {
         passcode: _input,
     };
     let result = a_star_search(start, &end, get_successors, distance_function, None).unwrap();
-    println!("the shortest path is {}", result.iter().last().unwrap().history.iter().collect::<String>());
+    println!(
+        "the shortest path is {}",
+        result
+            .iter()
+            .last()
+            .unwrap()
+            .history
+            .iter()
+            .collect::<String>()
+    );
 
     println!("the longest path is {}", get_longest_path(_input).len());
 }
 
 lazy_static! {
-    static ref END_POSITION: Coord = Coord {x: 3, y: 3};
+    static ref END_POSITION: Coord = Coord { x: 3, y: 3 };
 }
 
 fn get_longest_path(passcode: &'static str) -> String {
@@ -38,10 +47,7 @@ fn get_longest_path(passcode: &'static str) -> String {
     });
     while !paths.is_empty() {
         let mut new_paths = HashSet::new();
-        for successor in paths.iter()
-            .flat_map(|p| {
-                get_successors_internal(p)
-            }) {
+        for successor in paths.iter().flat_map(|p| get_successors_internal(p)) {
             if successor.current_position == *END_POSITION {
                 finished_paths.insert(successor);
             } else {
@@ -51,11 +57,16 @@ fn get_longest_path(passcode: &'static str) -> String {
         paths = new_paths;
     }
 
-    finished_paths.into_iter().max_by(|a, b| a.history.len().cmp(&b.history.len()))
-        .unwrap().history.into_iter().collect()
+    finished_paths
+        .into_iter()
+        .max_by(|a, b| a.history.len().cmp(&b.history.len()))
+        .unwrap()
+        .history
+        .into_iter()
+        .collect()
 }
 
-fn get_successors_internal(path: &Path) -> impl Iterator<Item=Path> + '_ {
+fn get_successors_internal(path: &Path) -> impl Iterator<Item = Path> + '_ {
     let current = &path.current_position;
     let is_open = |c: char| {
         if c.is_numeric() || c == 'a' {
@@ -68,13 +79,21 @@ fn get_successors_internal(path: &Path) -> impl Iterator<Item=Path> + '_ {
     let mut chars = hash.chars();
     [
         (chars.next().unwrap(), current.y > 0, Direction::Up),
-        (chars.next().unwrap(), current.y < END_POSITION.y, Direction::Down),
+        (
+            chars.next().unwrap(),
+            current.y < END_POSITION.y,
+            Direction::Down,
+        ),
         (chars.next().unwrap(), current.x > 0, Direction::Left),
-        (chars.next().unwrap(), current.x < END_POSITION.x, Direction::Right),
+        (
+            chars.next().unwrap(),
+            current.x < END_POSITION.x,
+            Direction::Right,
+        ),
     ]
-        .into_iter()
-        .filter(move |(c, ok, _)| *ok && is_open(*c))
-        .map(|(_, _, dir)| path.moved(dir))
+    .into_iter()
+    .filter(move |(c, ok, _)| *ok && is_open(*c))
+    .map(|(_, _, dir)| path.moved(dir))
 }
 
 fn get_successors(path: &Path) -> Vec<Successor<Path>> {
@@ -84,7 +103,10 @@ fn get_successors(path: &Path) -> Vec<Successor<Path>> {
 }
 
 fn distance_function(details: CurrentNodeDetails<Path>) -> i32 {
-    details.current_node.current_position.get_manhattan_distance(&details.target_node.current_position) as i32
+    details
+        .current_node
+        .current_position
+        .get_manhattan_distance(&details.target_node.current_position) as i32
 }
 
 #[derive(Hash, Eq, Ord, PartialOrd, Debug, Clone)]
@@ -96,10 +118,13 @@ struct Path {
 
 impl Path {
     pub(crate) fn get_hash(&self) -> String {
-        let s: String = self.history.iter().fold(self.passcode.to_string(), |mut hash, next| {
-            hash.push(*next);
-            hash
-        });
+        let s: String = self
+            .history
+            .iter()
+            .fold(self.passcode.to_string(), |mut hash, next| {
+                hash.push(*next);
+                hash
+            });
         let digest = md5::compute(s);
         format!("{:x}", digest)
     }

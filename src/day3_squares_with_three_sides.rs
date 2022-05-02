@@ -3,20 +3,36 @@ use std::str::FromStr;
 pub(crate) fn run() {
     let input = get_input();
 
-    let candidates: Vec<TriangleCandidate> = input.split('\n').map(|line| line.parse().unwrap()).collect();
-    println!("there are {} triangles", candidates.iter().filter(|t| t.is_triangle()).count());
+    let candidates: Vec<TriangleCandidate> = input
+        .split('\n')
+        .map(|line| line.parse().unwrap())
+        .collect();
+    println!(
+        "there are {} triangles",
+        candidates.iter().filter(|t| t.is_triangle()).count()
+    );
 
     let candidates = get_candidates_vertically(input).unwrap();
-    println!("grouping vertically, there are {} triangles", candidates.iter().filter(|t| t.is_triangle()).count());
+    println!(
+        "grouping vertically, there are {} triangles",
+        candidates.iter().filter(|t| t.is_triangle()).count()
+    );
 }
 
 fn get_candidates_vertically(input: &str) -> Result<Vec<TriangleCandidate>, ()> {
-    let mut results: Vec<TriangleCandidate> = Vec::with_capacity(3 * (input.chars().filter(|&c| c == '\n').count() + 1));
+    let mut results: Vec<TriangleCandidate> =
+        Vec::with_capacity(3 * (input.chars().filter(|&c| c == '\n').count() + 1));
 
     let mut current: Vec<u32> = Default::default();
     for i in 0..3 {
         for line in input.split('\n') {
-            let next: u32 = line.trim().split_whitespace().nth(i).ok_or(())?.parse().or(Err(()))?;
+            let next: u32 = line
+                .trim()
+                .split_whitespace()
+                .nth(i)
+                .ok_or(())?
+                .parse()
+                .or(Err(()))?;
             current.push(next);
             if current.len() == 3 {
                 results.push(TriangleCandidate::new(current[0], current[1], current[2]));

@@ -18,25 +18,34 @@ pub(crate) fn run() {
 
 fn get_next_to_left(elves: &[Elf], i: usize, _remaining: usize) -> Option<usize> {
     let n = elves.len();
-    (1..n).map(|j| (j + i) % n)
-        .filter(|&j| elves[j].presents > 0).next()
+    (1..n)
+        .map(|j| (j + i) % n)
+        .filter(|&j| elves[j].presents > 0)
+        .next()
 }
 
 // takes too long...
 fn _get_next_across(elves: &[Elf], i: usize, remaining: usize) -> Option<usize> {
     let n = elves.len();
-    (1..n).map(|j| (j + i) % n)
-        .filter(|&j| elves[j].presents > 0).nth((remaining / 2).max(1) - 1)
+    (1..n)
+        .map(|j| (j + i) % n)
+        .filter(|&j| elves[j].presents > 0)
+        .nth((remaining / 2).max(1) - 1)
 }
 
-fn exchange_presents<TFun: Fn(&[Elf], usize, usize) -> Option<usize>>(mut elves: Vec<Elf>, get_next_elf: TFun) -> Result<()> {
+fn exchange_presents<TFun: Fn(&[Elf], usize, usize) -> Option<usize>>(
+    mut elves: Vec<Elf>,
+    get_next_elf: TFun,
+) -> Result<()> {
     let n = elves.len();
     let mut i = 0usize;
     let mut remaining_elves = n;
     loop {
         let other_elf = match get_next_elf(&elves, i, remaining_elves) {
-            None => { break; }
-            Some(other) => other
+            None => {
+                break;
+            }
+            Some(other) => other,
         };
         let presents = std::mem::take(&mut elves[other_elf].presents);
         debug!("elf {} steals presents from elf {}", i + 1, other_elf + 1);
@@ -49,12 +58,25 @@ fn exchange_presents<TFun: Fn(&[Elf], usize, usize) -> Option<usize>>(mut elves:
         }
         remaining_elves -= 1;
         if remaining_elves % ((n / 20).max(1)) == 0 {
-            info!("{} elves remain ({}%)", remaining_elves, (n - remaining_elves) * 100 / n);
+            info!(
+                "{} elves remain ({}%)",
+                remaining_elves,
+                (n - remaining_elves) * 100 / n
+            );
         }
     }
 
-    let winner = elves.iter().enumerate().filter(|(_, e)| e.presents > 0).next().ok_or(anyhow!("no winner found..."))?;
-    println!("winning elf is {} with {} presents", winner.0 + 1, winner.1.presents);
+    let winner = elves
+        .iter()
+        .enumerate()
+        .filter(|(_, e)| e.presents > 0)
+        .next()
+        .ok_or(anyhow!("no winner found..."))?;
+    println!(
+        "winning elf is {} with {} presents",
+        winner.0 + 1,
+        winner.1.presents
+    );
     Ok(())
 }
 
@@ -95,12 +117,25 @@ fn _exchange_presents_v2(mut elves: Vec<Elf>) -> Result<()> {
         i = get_next(&elves, i);
 
         if remaining_elves % ((elves.len() / 20).max(1)) == 0 {
-            info!("{} elves remain ({}%)", remaining_elves, (elves.len() - remaining_elves) * 100 / elves.len());
+            info!(
+                "{} elves remain ({}%)",
+                remaining_elves,
+                (elves.len() - remaining_elves) * 100 / elves.len()
+            );
         }
     }
 
-    let winner = elves.iter().enumerate().filter(|(_, e)| e.presents > 0).next().ok_or(anyhow!("no winner found..."))?;
-    println!("winning elf is {} with {} presents", winner.0 + 1, winner.1.presents);
+    let winner = elves
+        .iter()
+        .enumerate()
+        .filter(|(_, e)| e.presents > 0)
+        .next()
+        .ok_or(anyhow!("no winner found..."))?;
+    println!(
+        "winning elf is {} with {} presents",
+        winner.0 + 1,
+        winner.1.presents
+    );
     Ok(())
 }
 

@@ -1,6 +1,6 @@
+use lazy_static::lazy_static;
 use std::fmt::{Debug, Formatter};
 use std::str::FromStr;
-use lazy_static::lazy_static;
 
 pub(crate) fn run() {
     let _input = ".^^.^.^^^^";
@@ -27,11 +27,7 @@ impl Room {
             let previous = &self.rows[i - 1];
             let mut row: Vec<Tile> = Vec::with_capacity(previous.len());
             for j in 0..previous.len() {
-                let left = if j == 0 {
-                    &SAFE_TILE
-                } else {
-                    &previous[j - 1]
-                };
+                let left = if j == 0 { &SAFE_TILE } else { &previous[j - 1] };
                 let center = &previous[j];
                 let right = if j == previous.len() - 1 {
                     &SAFE_TILE
@@ -45,14 +41,23 @@ impl Room {
         }
     }
     pub(crate) fn count_safe_tiles(&self) -> usize {
-        self.rows.iter().map(|r| r.iter().filter(|c| !c.is_trap).count()).sum()
+        self.rows
+            .iter()
+            .map(|r| r.iter().filter(|c| !c.is_trap).count())
+            .sum()
     }
 }
 
 impl Debug for Room {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in self.rows.iter() {
-            write!(f, "{}\n", row.iter().map(|c| if c.is_trap { '^' } else { '.' }).collect::<String>())?;
+            write!(
+                f,
+                "{}\n",
+                row.iter()
+                    .map(|c| if c.is_trap { '^' } else { '.' })
+                    .collect::<String>()
+            )?;
         }
         Ok(())
     }
@@ -63,18 +68,19 @@ impl FromStr for Room {
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         Ok(Self {
-            rows: vec![
-                s.chars().map(|c| Tile::new(if c == '^' { true } else { false })).collect()
-            ]
+            rows: vec![s
+                .chars()
+                .map(|c| Tile::new(if c == '^' { true } else { false }))
+                .collect()],
         })
     }
 }
 
 fn next_is_trap(left: &Tile, center: &Tile, right: &Tile) -> bool {
-    (left.is_trap && center.is_trap && !right.is_trap) ||
-        (center.is_trap && right.is_trap && !left.is_trap) ||
-        (left.is_trap && !center.is_trap && !right.is_trap) ||
-        (!left.is_trap && !center.is_trap && right.is_trap)
+    (left.is_trap && center.is_trap && !right.is_trap)
+        || (center.is_trap && right.is_trap && !left.is_trap)
+        || (left.is_trap && !center.is_trap && !right.is_trap)
+        || (!left.is_trap && !center.is_trap && right.is_trap)
 }
 
 lazy_static! {

@@ -1,7 +1,7 @@
-use std::str::FromStr;
-use anyhow::{Result, anyhow};
-use thiserror::Error;
+use anyhow::{anyhow, Result};
 use log::{debug, warn};
+use std::str::FromStr;
+use thiserror::Error;
 
 pub(crate) fn run() {
     let _input = "5-8\n0-2\n4-7";
@@ -35,12 +35,23 @@ impl AllowedIpRanges {
         self.0.iter().map(|range| range.count()).sum()
     }
     pub(crate) fn block_range(&mut self, blocked: &IpRange) -> Result<()> {
-        let left = self.0.iter().enumerate().filter(|(_, range)| range.end >= blocked.start)
+        let left = self
+            .0
+            .iter()
+            .enumerate()
+            .filter(|(_, range)| range.end >= blocked.start)
             .map(|(i, _)| i)
-            .next().ok_or(anyhow!("could not find left boundary"))?;
-        let right = self.0.iter().enumerate().skip(left).filter(|(_, range)| range.end >= blocked.end)
+            .next()
+            .ok_or(anyhow!("could not find left boundary"))?;
+        let right = self
+            .0
+            .iter()
+            .enumerate()
+            .skip(left)
+            .filter(|(_, range)| range.end >= blocked.end)
             .map(|(i, _)| i)
-            .next().unwrap_or(left);
+            .next()
+            .unwrap_or(left);
         let mut replace_with: Vec<IpRange> = Vec::with_capacity(2);
         if blocked.start > 0 && blocked.start > self.0[left].start {
             replace_with.push(IpRange {
@@ -55,7 +66,11 @@ impl AllowedIpRanges {
             });
         }
         debug!("blocking {:?}:", blocked);
-        debug!("replacing {:?} with {:?}", &self.0[left..=right], replace_with);
+        debug!(
+            "replacing {:?} with {:?}",
+            &self.0[left..=right],
+            replace_with
+        );
         self.0.splice(left..=right, replace_with);
 
         Ok(())

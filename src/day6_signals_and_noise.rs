@@ -15,11 +15,15 @@ fn decode(input: &str, get_least_common: bool) -> String {
 
     let mut result = String::new();
     for i in 0..len {
-        let mut counts: Vec<(char, usize)> = lines.iter().fold(HashMap::new(), |mut map, next| {
-            let c = next.chars().nth(i).unwrap();
-            *map.entry(c).or_default() += 1usize;
-            map
-        }).into_iter().collect();
+        let mut counts: Vec<(char, usize)> = lines
+            .iter()
+            .fold(HashMap::new(), |mut map, next| {
+                let c = next.chars().nth(i).unwrap();
+                *map.entry(c).or_default() += 1usize;
+                map
+            })
+            .into_iter()
+            .collect();
         if get_least_common {
             counts.sort_by(|&a, &b| a.1.cmp(&b.1));
         } else {

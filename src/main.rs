@@ -1,14 +1,5 @@
 use utils::timer::Timer;
 
-mod day1_no_time_for_taxicab;
-mod day2_bathroom_security;
-mod day3_squares_with_three_sides;
-mod day4_security_through_obscurity;
-mod day5_game_of_chess;
-mod day6_signals_and_noise;
-mod day7_internet_protocol_v7;
-mod day8_two_factor_authentication;
-mod day9_explosives_in_cyberspace;
 mod day10_balance_bots;
 mod day11_radioisotope_thermoelectric_generators;
 mod day12_leonardos_monorail;
@@ -19,8 +10,17 @@ mod day16_dragon_checksum;
 mod day17_two_steps_forward;
 mod day18_like_a_rogue;
 mod day19_an_elephant_named_joseph;
+mod day1_no_time_for_taxicab;
 mod day20_firewall_rules;
 mod day21_scrambled_letters_and_hash;
+mod day2_bathroom_security;
+mod day3_squares_with_three_sides;
+mod day4_security_through_obscurity;
+mod day5_game_of_chess;
+mod day6_signals_and_noise;
+mod day7_internet_protocol_v7;
+mod day8_two_factor_authentication;
+mod day9_explosives_in_cyberspace;
 
 fn main() {
     env_logger::init();
@@ -53,6 +53,6 @@ fn main() {
         19 => day19_an_elephant_named_joseph::run(),
         20 => day20_firewall_rules::run(),
         21 => day21_scrambled_letters_and_hash::run(),
-        _ => panic!("day {} not found", day)
+        _ => panic!("day {} not found", day),
     }
 }

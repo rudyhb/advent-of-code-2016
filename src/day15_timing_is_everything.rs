@@ -7,12 +7,21 @@ Disc #2 has 2 positions; at time=0, it is at position 1.";
 
     let mut disks: Vec<Disk> = _input.lines().map(|line| line.parse().unwrap()).collect();
     let time = get_first_time_to_press_button(&disks);
-    println!("the first time to press the button to get a capsule is t={}", time);
+    println!(
+        "the first time to press the button to get a capsule is t={}",
+        time
+    );
 
-    disks.push(Disk { num_positions: 11, position: 0 });
+    disks.push(Disk {
+        num_positions: 11,
+        position: 0,
+    });
     let time = get_first_time_to_press_button(&disks);
 
-    println!("with additional disk, the first time to press the button to get a capsule is t={}", time);
+    println!(
+        "with additional disk, the first time to press the button to get a capsule is t={}",
+        time
+    );
 }
 
 fn get_first_time_to_press_button(disks: &[Disk]) -> usize {
@@ -20,9 +29,10 @@ fn get_first_time_to_press_button(disks: &[Disk]) -> usize {
 
     (0..MAX_TIME)
         .filter(|&t| {
-            disks.iter().enumerate().all(|(i, disk)| {
-                disk.position_at(t + i + 1) == 0
-            })
+            disks
+                .iter()
+                .enumerate()
+                .all(|(i, disk)| disk.position_at(t + i + 1) == 0)
         })
         .next()
         .expect("max time exceeded")
@@ -49,9 +59,20 @@ impl FromStr for Disk {
             words.next();
             words.next().ok_or(())?.parse().or(Err(()))?
         };
-        let position: usize = parts.next().ok_or(())?.split_whitespace().last().ok_or(())?.trim_end_matches('.').parse().or(Err(()))?;
+        let position: usize = parts
+            .next()
+            .ok_or(())?
+            .split_whitespace()
+            .last()
+            .ok_or(())?
+            .trim_end_matches('.')
+            .parse()
+            .or(Err(()))?;
 
-        Ok(Self { num_positions, position })
+        Ok(Self {
+            num_positions,
+            position,
+        })
     }
 }
 

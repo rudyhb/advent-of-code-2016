@@ -26,7 +26,13 @@ impl Message {
         self.repetition = value;
     }
     pub(crate) fn get_total_length(&self) -> usize {
-        self.repetition * (self.length + self.children.iter().map(|c| c.get_total_length()).sum::<usize>())
+        self.repetition
+            * (self.length
+                + self
+                    .children
+                    .iter()
+                    .map(|c| c.get_total_length())
+                    .sum::<usize>())
     }
 }
 

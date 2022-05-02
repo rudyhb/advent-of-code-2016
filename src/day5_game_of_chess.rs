@@ -36,7 +36,8 @@ impl<'a> Hacker<'a> {
             self.nonce += 1;
             let hash = format!("{:x}", digest);
             if hash.starts_with(leader) {
-                self.password.push(hash.chars().nth(Self::LEADING_ZEROS).unwrap());
+                self.password
+                    .push(hash.chars().nth(Self::LEADING_ZEROS).unwrap());
                 break;
             }
 
@@ -75,7 +76,12 @@ impl<'a> HackerV2<'a> {
             self.nonce += 1;
             let hash = format!("{:x}", digest);
             if hash.starts_with(leader) {
-                let position = hash.chars().nth(Self::LEADING_ZEROS).unwrap().to_digit(16).unwrap() as usize;
+                let position = hash
+                    .chars()
+                    .nth(Self::LEADING_ZEROS)
+                    .unwrap()
+                    .to_digit(16)
+                    .unwrap() as usize;
                 if position < 8 && self.password[position].is_none() {
                     let c = hash.chars().nth(Self::LEADING_ZEROS + 1).unwrap();
                     self.password[position] = Some(c);
@@ -89,7 +95,11 @@ impl<'a> HackerV2<'a> {
         }
     }
     pub(crate) fn get_password(&self) -> String {
-        self.password.iter().map(|c| c.ok_or(())).collect::<Result<String, _>>().unwrap()
+        self.password
+            .iter()
+            .map(|c| c.ok_or(()))
+            .collect::<Result<String, _>>()
+            .unwrap()
     }
 }
 

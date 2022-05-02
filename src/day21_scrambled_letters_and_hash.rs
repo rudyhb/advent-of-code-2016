@@ -1,7 +1,7 @@
-use std::fmt::{Debug, Formatter};
-use std::str::{FromStr};
 use anyhow::Result;
 use log::debug;
+use std::fmt::{Debug, Formatter};
+use std::str::FromStr;
 
 pub(crate) fn run() {
     let _input = "swap position 4 with position 0
@@ -55,7 +55,14 @@ struct Password(Vec<Character>);
 
 impl Debug for Password {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.iter().map(|c| format!("{:?}", c)).collect::<String>())
+        write!(
+            f,
+            "{}",
+            self.0
+                .iter()
+                .map(|c| format!("{:?}", c))
+                .collect::<String>()
+        )
     }
 }
 
@@ -71,13 +78,18 @@ impl Password {
     fn rotate_right(&mut self, amount: isize) {
         let reference = self.0.clone();
         for (i, val) in self.0.iter_mut().enumerate() {
-            let j = (((i as isize - amount) % reference.len() as isize) + reference.len() as isize) as usize % reference.len();
+            let j = (((i as isize - amount) % reference.len() as isize) + reference.len() as isize)
+                as usize
+                % reference.len();
             *val = reference[j];
         }
     }
     pub(crate) fn scramble(&mut self, instruction: &Instruction) -> Result<()> {
         let position = |letter: &Character| {
-            self.0.iter().position(|c| c == letter).ok_or(Error::ScramblingError)
+            self.0
+                .iter()
+                .position(|c| c == letter)
+                .ok_or(Error::ScramblingError)
         };
         match instruction {
             Instruction::SwapPositions(a, b) => {
@@ -89,10 +101,11 @@ impl Password {
                 self.swap_positions(a, b);
             }
             Instruction::Rotate(dir, amount) => {
-                let amount = *amount as isize * match dir {
-                    Direction::Left => -1,
-                    Direction::Right => 1
-                };
+                let amount = *amount as isize
+                    * match dir {
+                        Direction::Left => -1,
+                        Direction::Right => 1,
+                    };
                 self.rotate_right(amount);
             }
             Instruction::RotateRightBasedOn(letter) => {
@@ -116,17 +129,23 @@ impl Password {
     }
     pub(crate) fn unscramble(&mut self, instruction: &Instruction) -> Result<()> {
         let position = |letter: &Character| {
-            self.0.iter().position(|c| c == letter).ok_or(Error::ScramblingError)
+            self.0
+                .iter()
+                .position(|c| c == letter)
+                .ok_or(Error::ScramblingError)
         };
         match instruction {
-            Instruction::SwapPositions(_, _) | Instruction::SwapLetters(_, _) | Instruction::ReversePositionsInclusive { .. } => {
+            Instruction::SwapPositions(_, _)
+            | Instruction::SwapLetters(_, _)
+            | Instruction::ReversePositionsInclusive { .. } => {
                 self.scramble(instruction)?;
             }
             Instruction::Rotate(dir, amount) => {
-                let amount = *amount as isize * match dir {
-                    Direction::Left => -1,
-                    Direction::Right => 1
-                };
+                let amount = *amount as isize
+                    * match dir {
+                        Direction::Left => -1,
+                        Direction::Right => 1,
+                    };
                 self.rotate_right(-amount);
             }
             Instruction::RotateRightBasedOn(letter) => {
@@ -134,8 +153,10 @@ impl Password {
                     (index + 1 + index + if index >= 4 { 1 } else { 0 }) % self.0.len()
                 };
                 let target = position(letter)?;
-                let original = (0..self.0.len()).filter(|&i| map(i) == target)
-                    .next().ok_or(Error::UnscramblingError)?;
+                let original = (0..self.0.len())
+                    .filter(|&i| map(i) == target)
+                    .next()
+                    .ok_or(Error::UnscramblingError)?;
                 debug!("original was {}, new target is {}", original, target);
                 let amount = (original + self.0.len() - target) % self.0.len();
                 self.rotate_right(amount as isize);
@@ -164,66 +185,61 @@ impl FromStr for Instruction {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut words = s.split_whitespace();
-        let mut next = || {
-            words.next().ok_or(Error::ParseError(s.to_string()))
-        };
+        let mut next = || words.next().ok_or(Error::ParseError(s.to_string()));
         let last = |words: std::str::SplitWhitespace| {
-            words.last().map(|w| w.to_owned()).ok_or(Error::ParseError(s.to_string()))
+            words
+                .last()
+                .map(|w| w.to_owned())
+                .ok_or(Error::ParseError(s.to_string()))
         };
-        Ok(
-            match next()? {
-                "swap" => {
-                    match next()? {
-                        "position" => {
-                            let left: usize = next()?.parse()?;
-                            let right: usize = last(words)?.parse()?;
-                            Self::SwapPositions(left, right)
-                        }
-                        "letter" => {
-                            let left: Character = next()?.parse()?;
-                            let right: Character = last(words)?.parse()?;
-                            Self::SwapLetters(left, right)
-                        }
-                        _ => return Err(Error::ParseError(s.to_string()).into()),
-                    }
+        Ok(match next()? {
+            "swap" => match next()? {
+                "position" => {
+                    let left: usize = next()?.parse()?;
+                    let right: usize = last(words)?.parse()?;
+                    Self::SwapPositions(left, right)
                 }
-                "rotate" => {
-                    match next()? {
-                        "left" => {
-                            let direction = Direction::Left;
-                            let amount: usize = next()?.parse()?;
-                            Self::Rotate(direction, amount)
-                        }
-                        "right" => {
-                            let direction = Direction::Right;
-                            let amount: usize = next()?.parse()?;
-                            Self::Rotate(direction, amount)
-                        }
-                        "based" => {
-                            let letter: Character = last(words)?.parse()?;
-                            Self::RotateRightBasedOn(letter)
-                        }
-                        _ => return Err(Error::ParseError(s.to_string()).into())
-                    }
-                }
-                "reverse" => {
-                    next()?;
-                    let from: usize = next()?.parse()?;
-                    next()?;
-                    let to: usize = next()?.parse()?;
-                    Self::ReversePositionsInclusive { from, to }
-                }
-                "move" => {
-                    next()?;
-                    let from: usize = next()?.parse()?;
-                    next()?;
-                    next()?;
-                    let to: usize = next()?.parse()?;
-                    Self::Move { from, to }
+                "letter" => {
+                    let left: Character = next()?.parse()?;
+                    let right: Character = last(words)?.parse()?;
+                    Self::SwapLetters(left, right)
                 }
                 _ => return Err(Error::ParseError(s.to_string()).into()),
+            },
+            "rotate" => match next()? {
+                "left" => {
+                    let direction = Direction::Left;
+                    let amount: usize = next()?.parse()?;
+                    Self::Rotate(direction, amount)
+                }
+                "right" => {
+                    let direction = Direction::Right;
+                    let amount: usize = next()?.parse()?;
+                    Self::Rotate(direction, amount)
+                }
+                "based" => {
+                    let letter: Character = last(words)?.parse()?;
+                    Self::RotateRightBasedOn(letter)
+                }
+                _ => return Err(Error::ParseError(s.to_string()).into()),
+            },
+            "reverse" => {
+                next()?;
+                let from: usize = next()?.parse()?;
+                next()?;
+                let to: usize = next()?.parse()?;
+                Self::ReversePositionsInclusive { from, to }
             }
-        )
+            "move" => {
+                next()?;
+                let from: usize = next()?.parse()?;
+                next()?;
+                next()?;
+                let to: usize = next()?.parse()?;
+                Self::Move { from, to }
+            }
+            _ => return Err(Error::ParseError(s.to_string()).into()),
+        })
     }
 }
 
@@ -249,7 +265,10 @@ impl FromStr for Character {
         if s.chars().skip(1).any(|_| true) {
             Err(Error::ParseError(s.to_string()).into())
         } else {
-            Ok(s.chars().next().ok_or(Error::ParseError(s.to_string()))?.into())
+            Ok(s.chars()
+                .next()
+                .ok_or(Error::ParseError(s.to_string()))?
+                .into())
         }
     }
 }

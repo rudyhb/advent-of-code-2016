@@ -5,7 +5,11 @@ pub(crate) fn run() {
     let _input = "rect 3x2\nrotate column x=1 by 1\nrotate row y=0 by 4\nrotate column x=1 by 1";
     let _input = _get_input();
 
-    let instructions: Vec<Instruction> = _input.lines().map(|line| line.parse()).collect::<Result<_, _>>().unwrap();
+    let instructions: Vec<Instruction> = _input
+        .lines()
+        .map(|line| line.parse())
+        .collect::<Result<_, _>>()
+        .unwrap();
 
     let mut _lcd = Lcd::new(7, 3);
     let mut _lcd = Lcd::new(50, 6);
@@ -25,7 +29,13 @@ struct Lcd(Vec<Vec<Pixel>>);
 impl Debug for Lcd {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in self.0.iter() {
-            write!(f, "{}\n", row.iter().map(|p| if p.0 { '#' } else { '.' }).collect::<String>())?;
+            write!(
+                f,
+                "{}\n",
+                row.iter()
+                    .map(|p| if p.0 { '#' } else { '.' })
+                    .collect::<String>()
+            )?;
         }
         Ok(())
     }
@@ -34,7 +44,7 @@ impl Debug for Lcd {
 impl Lcd {
     pub(crate) fn new(width: usize, height: usize) -> Self {
         Self {
-            0: vec![vec![Pixel(false); width]; height]
+            0: vec![vec![Pixel(false); width]; height],
         }
     }
     pub(crate) fn apply(&mut self, instruction: &Instruction) {
@@ -66,7 +76,10 @@ impl Lcd {
         }
     }
     pub(crate) fn lit_count(&self) -> usize {
-        self.0.iter().map(|row| row.iter().filter(|p| p.0).count()).sum()
+        self.0
+            .iter()
+            .map(|row| row.iter().filter(|p| p.0).count())
+            .sum()
     }
 }
 
@@ -83,33 +96,30 @@ impl FromStr for Instruction {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parse_next = |parts: &mut Split<char>| {
-            parts.next().ok_or(())?.parse::<usize>().or(Err(()))
-        };
+        let parse_next =
+            |parts: &mut Split<char>| parts.next().ok_or(())?.parse::<usize>().or(Err(()));
         let mut words = s.split_whitespace();
         Ok(match words.next().ok_or(())? {
             "rect" => {
                 let mut parts = words.next().ok_or(())?.split('x');
                 Self::Rect(parse_next(&mut parts)?, parse_next(&mut parts)?)
             }
-            "rotate" => {
-                match words.next().ok_or(())? {
-                    "column" => {
-                        let col = words.next().ok_or(())?[2..].parse::<usize>().or(Err(()))?;
-                        words.next();
-                        let val = words.next().ok_or(())?.parse::<usize>().or(Err(()))?;
-                        Self::RotateColumn(col, val)
-                    }
-                    "row" => {
-                        let row = words.next().ok_or(())?[2..].parse::<usize>().or(Err(()))?;
-                        words.next();
-                        let val = words.next().ok_or(())?.parse::<usize>().or(Err(()))?;
-                        Self::RotateRow(row, val)
-                    }
-                    _ => return Err(())
+            "rotate" => match words.next().ok_or(())? {
+                "column" => {
+                    let col = words.next().ok_or(())?[2..].parse::<usize>().or(Err(()))?;
+                    words.next();
+                    let val = words.next().ok_or(())?.parse::<usize>().or(Err(()))?;
+                    Self::RotateColumn(col, val)
                 }
-            }
-            _ => return Err(())
+                "row" => {
+                    let row = words.next().ok_or(())?[2..].parse::<usize>().or(Err(()))?;
+                    words.next();
+                    let val = words.next().ok_or(())?.parse::<usize>().or(Err(()))?;
+                    Self::RotateRow(row, val)
+                }
+                _ => return Err(()),
+            },
+            _ => return Err(()),
         })
     }
 }

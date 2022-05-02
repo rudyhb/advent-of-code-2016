@@ -24,12 +24,14 @@ struct Computer {
 
 impl Computer {
     pub(crate) fn new() -> Self {
-        Self { registers: Default::default() }
+        Self {
+            registers: Default::default(),
+        }
     }
     pub(crate) fn get_value(&self, rov: &RegisterOrValue) -> i32 {
         match rov {
             RegisterOrValue::Register(r) => self.registers.get(&r).map(|v| *v).unwrap_or_default(),
-            RegisterOrValue::Value(v) => *v
+            RegisterOrValue::Value(v) => *v,
         }
     }
     pub(crate) fn update<TFun: Fn(i32) -> i32>(&mut self, r: &Register, func: TFun) {
@@ -123,19 +125,17 @@ impl FromStr for Instruction {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut words = s.split_whitespace();
         match words.next().unwrap() {
-            "cpy" => {
-                Ok(Self::Copy(words.next().unwrap().parse().unwrap(), words.next().unwrap().parse().unwrap()))
-            }
-            "inc" => {
-                Ok(Self::Increase(words.next().unwrap().parse().unwrap()))
-            }
-            "dec" => {
-                Ok(Self::Decrease(words.next().unwrap().parse().unwrap()))
-            }
-            "jnz" => {
-                Ok(Self::JumpIfNotZero(words.next().unwrap().parse().unwrap(), words.next().unwrap().parse().unwrap()))
-            }
-            _ => Err(())
+            "cpy" => Ok(Self::Copy(
+                words.next().unwrap().parse().unwrap(),
+                words.next().unwrap().parse().unwrap(),
+            )),
+            "inc" => Ok(Self::Increase(words.next().unwrap().parse().unwrap())),
+            "dec" => Ok(Self::Decrease(words.next().unwrap().parse().unwrap())),
+            "jnz" => Ok(Self::JumpIfNotZero(
+                words.next().unwrap().parse().unwrap(),
+                words.next().unwrap().parse().unwrap(),
+            )),
+            _ => Err(()),
         }
     }
 }

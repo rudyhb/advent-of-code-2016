@@ -10,7 +10,10 @@ value 2 goes to bot 2";
     let _input = _get_input();
 
     let (init_instructions, transfer_instructions) = parse_instructions(_input);
-    let transfer_instructions: HashMap<usize, TransferInstruction> = transfer_instructions.into_iter().map(|i| (i.from_bot, i)).collect();
+    let transfer_instructions: HashMap<usize, TransferInstruction> = transfer_instructions
+        .into_iter()
+        .map(|i| (i.from_bot, i))
+        .collect();
 
     let _target = vec![5usize, 2];
     let _target = vec![61usize, 17];
@@ -24,10 +27,9 @@ value 2 goes to bot 2";
     println!("bot {:?} is responsible for comparing {:?}", bot, _target);
 
     let outputs = &factory.outputs;
-    println!("outputs 0 * 1 * 2 = {}",
-             outputs.get(&0).unwrap() *
-                 outputs.get(&1).unwrap() *
-                 outputs.get(&2).unwrap()
+    println!(
+        "outputs 0 * 1 * 2 = {}",
+        outputs.get(&0).unwrap() * outputs.get(&1).unwrap() * outputs.get(&2).unwrap()
     );
 }
 
@@ -45,20 +47,35 @@ impl Factory {
         self.outputs.insert(output, value);
     }
     pub(crate) fn init(init_instructions: &[InitInstruction]) -> Self {
-        let mut result = Self { bots: Default::default(), outputs: Default::default() };
+        let mut result = Self {
+            bots: Default::default(),
+            outputs: Default::default(),
+        };
         for instruction in init_instructions {
             result.add_bot_value(instruction.to_bot, instruction.value);
-            println!("after {:?}, bot {}: {:?}", instruction, instruction.to_bot, result.bots.get(&instruction.to_bot));
+            println!(
+                "after {:?}, bot {}: {:?}",
+                instruction,
+                instruction.to_bot,
+                result.bots.get(&instruction.to_bot)
+            );
         }
         result
     }
     pub(crate) fn instruct(&mut self, instructions: &HashMap<usize, TransferInstruction>) {
         while self.bots.iter().any(|(_, b)| b.is_ready()) {
-            let (bot_index, bot) = self.bots.iter_mut().filter(|(_, b)| b.is_ready()).next().unwrap();
+            let (bot_index, bot) = self
+                .bots
+                .iter_mut()
+                .filter(|(_, b)| b.is_ready())
+                .next()
+                .unwrap();
             let values = if let Some(instruction) = instructions.get(bot_index) {
                 println!("instruction: {:?}", instruction);
                 bot.deliver_values(instruction)
-            } else { continue; };
+            } else {
+                continue;
+            };
             for (destination, value) in values {
                 match destination {
                     Destination::Bot(to_bot) => {
@@ -75,7 +92,11 @@ impl Factory {
     pub(crate) fn get_bot(&self, target_values: &[usize]) -> Option<usize> {
         let mut target = target_values.to_vec();
         target.sort();
-        self.bots.iter().filter(|&(_, bot)| bot.values == target).next().map(|(&i, _)| i)
+        self.bots
+            .iter()
+            .filter(|&(_, bot)| bot.values == target)
+            .next()
+            .map(|(&i, _)| i)
     }
 }
 
@@ -93,14 +114,17 @@ impl Bot {
     pub(crate) fn is_ready(&self) -> bool {
         !self.is_done && self.values.len() == 2
     }
-    pub(crate) fn deliver_values(&mut self, instruction: &TransferInstruction) -> [(Destination, usize); 2] {
+    pub(crate) fn deliver_values(
+        &mut self,
+        instruction: &TransferInstruction,
+    ) -> [(Destination, usize); 2] {
         if !self.is_ready() {
             panic!("bot is not ready to deliver");
         }
         self.is_done = true;
         [
             (instruction.low_to, self.values[0]),
-            (instruction.high_to, self.values[1])
+            (instruction.high_to, self.values[1]),
         ]
     }
 }
@@ -133,17 +157,18 @@ fn parse_instructions(s: &str) -> (Vec<InitInstruction>, Vec<TransferInstruction
             "value" => {
                 let value: usize = words.next().unwrap().parse().unwrap();
                 let to_bot: usize = words.last().unwrap().parse().unwrap();
-                init_instructions.push(InitInstruction {
-                    value,
-                    to_bot,
-                })
+                init_instructions.push(InitInstruction { value, to_bot })
             }
             "bot" => {
                 let from_bot: usize = words.next().unwrap().parse().unwrap();
-                for _ in 0..3 { words.next(); }
+                for _ in 0..3 {
+                    words.next();
+                }
                 let low_to = words.next().unwrap();
                 let low_to_index: usize = words.next().unwrap().parse().unwrap();
-                for _ in 0..3 { words.next(); }
+                for _ in 0..3 {
+                    words.next();
+                }
                 let high_to = words.next().unwrap();
                 let high_to_index: usize = words.next().unwrap().parse().unwrap();
                 let low_to = parse_destination(low_to, low_to_index);
@@ -155,7 +180,7 @@ fn parse_instructions(s: &str) -> (Vec<InitInstruction>, Vec<TransferInstruction
                     high_to,
                 })
             }
-            _ => panic!("invalid first word")
+            _ => panic!("invalid first word"),
         }
     }
 
@@ -166,7 +191,7 @@ fn parse_destination(to: &str, index: usize) -> Destination {
     match to {
         "bot" => Destination::Bot(index),
         "output" => Destination::Output(index),
-        _ => panic!("destination out of range")
+        _ => panic!("destination out of range"),
     }
 }
 

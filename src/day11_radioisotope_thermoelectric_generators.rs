@@ -15,18 +15,20 @@ The fourth floor contains nothing relevant.";
     add_extra_items_on_first_floor(&mut building, true);
 
     let target = {
-        let mut last_floor =
-            building.floors.iter().flat_map(|f| f.iter().cloned()).collect::<Vec<_>>();
+        let mut last_floor = building
+            .floors
+            .iter()
+            .flat_map(|f| f.iter().cloned())
+            .collect::<Vec<_>>();
         last_floor.sort();
 
         Building {
             elevator_floor: 3,
-            floors:
-            [
+            floors: [
                 Default::default(),
                 Default::default(),
                 Default::default(),
-                last_floor
+                last_floor,
             ],
         }
     };
@@ -34,7 +36,8 @@ The fourth floor contains nothing relevant.";
 
     println!("initial state:{}\n", building);
 
-    let solution = a_star_search(building, &target, get_successors, distance_function, None).expect("no solution found");
+    let solution = a_star_search(building, &target, get_successors, distance_function, None)
+        .expect("no solution found");
     for (i, step) in solution.iter().enumerate().skip(1) {
         println!("step {}:{}\n", i, step);
     }
@@ -45,14 +48,12 @@ fn add_extra_items_on_first_floor(building: &mut Building, add: bool) {
     if !add {
         return;
     }
-    building.floors[0].extend(
-        [
-            Device::Generator("elerium"),
-            Device::Microchip("elerium"),
-            Device::Generator("dilithium"),
-            Device::Microchip("dilithium"),
-        ]
-    )
+    building.floors[0].extend([
+        Device::Generator("elerium"),
+        Device::Microchip("elerium"),
+        Device::Generator("dilithium"),
+        Device::Microchip("dilithium"),
+    ])
 }
 
 impl AStarNode for Building {}
@@ -68,18 +69,23 @@ fn get_limited_items(from: &[Device]) -> Option<Vec<Device>> {
     }
 
     let mut count_both = 0usize;
-    Some(map.into_iter().flat_map(|(_, devices)| {
-        if devices.len() == 2 {
-            if count_both < 2 {
-                count_both += 1;
-                devices
-            } else {
-                Default::default()
-            }
-        } else {
-            devices
-        }
-    }).cloned().collect())
+    Some(
+        map.into_iter()
+            .flat_map(|(_, devices)| {
+                if devices.len() == 2 {
+                    if count_both < 2 {
+                        count_both += 1;
+                        devices
+                    } else {
+                        Default::default()
+                    }
+                } else {
+                    devices
+                }
+            })
+            .cloned()
+            .collect(),
+    )
 }
 
 fn get_successors(state: &Building) -> Vec<Successor<Building>> {
@@ -97,42 +103,52 @@ fn get_successors(state: &Building) -> Vec<Successor<Building>> {
     } else {
         vec![state.elevator_floor - 1, state.elevator_floor + 1]
     };
-    possible_floors.into_iter().flat_map(|to_floor| {
-        if items.len() < 2 {
-            return items
-                .into_iter()
-                .filter(|&item| state.is_valid_bringing(&[item], to_floor))
-                .map(|item| {
+    possible_floors
+        .into_iter()
+        .flat_map(|to_floor| {
+            if items.len() < 2 {
+                return items
+                    .into_iter()
+                    .filter(|&item| state.is_valid_bringing(&[item], to_floor))
+                    .map(|item| {
+                        let mut next = state.clone();
+                        next.bring(vec![item.clone()], to_floor);
+                        Successor::new(next, 1)
+                    })
+                    .collect::<Vec<_>>();
+            }
+            permutator::Combination::combination(items, 2)
+                .chain(items.iter().map(|item| vec![item]))
+                .filter(move |c| state.is_valid_bringing(&c[..], to_floor))
+                .map(move |c| {
                     let mut next = state.clone();
-                    next.bring(vec![item.clone()], to_floor);
+                    next.bring(c.into_iter().cloned().collect(), to_floor);
                     Successor::new(next, 1)
-                }).collect::<Vec<_>>();
-        }
-        permutator::Combination::combination(items, 2)
-            .chain(items.iter().map(|item| vec![item]))
-            .filter(move |c| state.is_valid_bringing(&c[..], to_floor))
-            .map(move |c| {
-                let mut next = state.clone();
-                next.bring(c.into_iter().cloned().collect(), to_floor);
-                Successor::new(next, 1)
-            }).collect::<Vec<_>>()
-    }).collect()
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
 }
 
 fn distance_function(details: CurrentNodeDetails<Building>) -> i32 {
     let n = details.current_node.floors.len();
-    10 * (0..n - 1)
-        .fold(0i32, |distance, i| {
-            let count = details.current_node.floors[i].len();
-            distance + (count * (n - i - 1)) as i32
+    10 * (0..n - 1).fold(0i32, |distance, i| {
+        let count = details.current_node.floors[i].len();
+        distance + (count * (n - i - 1)) as i32
+    }) + details
+        .current_node
+        .floors
+        .iter()
+        .enumerate()
+        .fold(HashMap::new(), |mut map, (i, devices)| {
+            for device in devices {
+                let entry: &mut usize = map.entry(device.get_name()).or_default();
+                *entry = (*entry).max(i) - (*entry).min(i);
+            }
+            map
         })
-        + details.current_node.floors.iter().enumerate().fold(HashMap::new(), |mut map, (i, devices)| {
-        for device in devices {
-            let entry: &mut usize = map.entry(device.get_name()).or_default();
-            *entry = (*entry).max(i) - (*entry).min(i);
-        }
-        map
-    }).into_iter().map(|(_, diff)| diff as i32)
+        .into_iter()
+        .map(|(_, diff)| diff as i32)
         .sum::<i32>()
 }
 
@@ -145,17 +161,31 @@ struct Building {
 impl Display for Building {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "\n")?;
-        for (i, floor) in self.get_ordered_row_contents().into_iter().enumerate().rev() {
-            write!(f, "F{i} {elevator} {floor}\n",
-                   i = i + 1,
-                   elevator = if self.elevator_floor == i { 'E' } else { '.' },
-                   floor = floor.into_iter().map(|space| match space {
-                       None => ". ".to_string(),
-                       Some(device) => match device {
-                           Device::Generator(g) => format!("{}G", g.chars().next().unwrap().to_uppercase()),
-                           Device::Microchip(m) => format!("{}M", m.chars().next().unwrap().to_uppercase())
-                       }
-                   }).collect::<Vec<String>>().join(" "))?
+        for (i, floor) in self
+            .get_ordered_row_contents()
+            .into_iter()
+            .enumerate()
+            .rev()
+        {
+            write!(
+                f,
+                "F{i} {elevator} {floor}\n",
+                i = i + 1,
+                elevator = if self.elevator_floor == i { 'E' } else { '.' },
+                floor = floor
+                    .into_iter()
+                    .map(|space| match space {
+                        None => ". ".to_string(),
+                        Some(device) => match device {
+                            Device::Generator(g) =>
+                                format!("{}G", g.chars().next().unwrap().to_uppercase()),
+                            Device::Microchip(m) =>
+                                format!("{}M", m.chars().next().unwrap().to_uppercase()),
+                        },
+                    })
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            )?
         }
         Ok(())
     }
@@ -172,7 +202,9 @@ impl Building {
                         if let Device::Microchip(name) = device {
                             if name != generator {
                                 let other_generator = Device::Generator(name);
-                                if !items.contains(&&other_generator) && !floor.contains(&other_generator) {
+                                if !items.contains(&&other_generator)
+                                    && !floor.contains(&other_generator)
+                                {
                                     return true;
                                 }
                             }
@@ -183,24 +215,40 @@ impl Building {
                     }
                     let chip = Device::Microchip(generator);
                     if !items.contains(&&chip) && from_floor.contains(&chip) {
-                        if from_floor.iter().filter(|item| !items.contains(item)).any(|item| if let Device::Generator(name) = item { name != generator } else { false }) {
+                        if from_floor
+                            .iter()
+                            .filter(|item| !items.contains(item))
+                            .any(|item| {
+                                if let Device::Generator(name) = item {
+                                    name != generator
+                                } else {
+                                    false
+                                }
+                            })
+                        {
                             return false;
                         }
                     }
                 }
                 Device::Microchip(chip) => {
                     let generator = Device::Generator(chip);
-//                     println!("\
-// chip: {chip:?}
-// generator: {generator:?}
-// items: {items:?}
-// floor: {floor:?}",
-//                     chip=chip,
-//                     generator=generator,
-//                     items=items,
-//                     floor=floor);
+                    //                     println!("\
+                    // chip: {chip:?}
+                    // generator: {generator:?}
+                    // items: {items:?}
+                    // floor: {floor:?}",
+                    //                     chip=chip,
+                    //                     generator=generator,
+                    //                     items=items,
+                    //                     floor=floor);
                     if !items.contains(&&generator) && !floor.contains(&generator) {
-                        if floor.iter().chain(items.iter().copied()).any(|item| if let Device::Generator(_) = item { true } else { false }) {
+                        if floor.iter().chain(items.iter().copied()).any(|item| {
+                            if let Device::Generator(_) = item {
+                                true
+                            } else {
+                                false
+                            }
+                        }) {
                             return false;
                         }
                     }
@@ -219,8 +267,20 @@ impl Building {
     pub(crate) fn get_ordered_row_contents(&self) -> [Vec<Option<&Device>>; NUM_FLOORS] {
         let mut all: Vec<_> = self.floors.iter().flat_map(|f| f.iter()).collect();
         all.sort();
-        let result: Vec<_> = self.floors.iter().map(|f|
-            all.iter().map(|&device| if f.contains(device) { Some(device) } else { None }).collect::<Vec<Option<&Device>>>())
+        let result: Vec<_> = self
+            .floors
+            .iter()
+            .map(|f| {
+                all.iter()
+                    .map(|&device| {
+                        if f.contains(device) {
+                            Some(device)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<Option<&Device>>>()
+            })
             .collect();
         result.try_into().unwrap()
     }
@@ -228,9 +288,7 @@ impl Building {
 
 impl From<&'static str> for Building {
     fn from(s: &'static str) -> Self {
-        let clean_word = |word: &'static str| {
-            word.split('-').next().unwrap()
-        };
+        let clean_word = |word: &'static str| word.split('-').next().unwrap();
         let parse_floor = |floor: &'static str| {
             let mut devices: Vec<Device> = Default::default();
             let mut last_word = "";
@@ -252,7 +310,12 @@ impl From<&'static str> for Building {
         };
         Self {
             elevator_floor: 0,
-            floors: s.lines().map(|line| parse_floor(line)).collect::<Vec<_>>().try_into().unwrap(),
+            floors: s
+                .lines()
+                .map(|line| parse_floor(line))
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap(),
         }
     }
 }
@@ -267,7 +330,7 @@ impl Device {
     pub(crate) fn get_name(&self) -> &str {
         match self {
             Device::Generator(name) => name,
-            Device::Microchip(name) => name
+            Device::Microchip(name) => name,
         }
     }
 }

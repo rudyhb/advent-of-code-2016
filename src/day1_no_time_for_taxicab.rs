@@ -6,22 +6,31 @@ pub(crate) fn run() {
     let _input = "R8, R4, R4, R8";
     let _input = _get_input();
 
-    let instructions: Vec<Instruction> = _input.split_whitespace().map(|line| line.trim_matches(',').parse().unwrap()).collect();
+    let instructions: Vec<Instruction> = _input
+        .split_whitespace()
+        .map(|line| line.trim_matches(',').parse().unwrap())
+        .collect();
 
     let mut person = Person::new();
     for instruction in instructions.iter() {
         person.walk(instruction);
     }
-    println!("last destination is {} blocks away", person.distance_from_start());
+    println!(
+        "last destination is {} blocks away",
+        person.distance_from_start()
+    );
 
     let mut person = Person::new();
     let mut locations_visited: HashSet<Coord> = Default::default();
     for instruction in instructions.iter() {
         let path = person.walk(instruction);
-        let first_location_visited_twice = path.iter().filter(|c| locations_visited.contains(c))
-            .next();
+        let first_location_visited_twice =
+            path.iter().filter(|c| locations_visited.contains(c)).next();
         if let Some(location) = first_location_visited_twice {
-            println!("first location visited twice is {} blocks away", location.get_manhattan_distance(&Default::default()));
+            println!(
+                "first location visited twice is {} blocks away",
+                location.get_manhattan_distance(&Default::default())
+            );
             return;
         }
         locations_visited.extend(path.into_iter());
@@ -41,11 +50,16 @@ struct Person {
 
 impl Person {
     pub(crate) fn new() -> Self {
-        Self { facing_direction: FacingDirection::North, position: Default::default() }
+        Self {
+            facing_direction: FacingDirection::North,
+            position: Default::default(),
+        }
     }
     pub(crate) fn walk(&mut self, instruction: &Instruction) -> Vec<Coord> {
         self.facing_direction = self.facing_direction.turn(&instruction.turn_direction);
-        let path = self.position.get_next(&self.facing_direction, instruction.walk_blocks);
+        let path = self
+            .position
+            .get_next(&self.facing_direction, instruction.walk_blocks);
         if let Some(last) = path.last() {
             self.position = last.clone();
         }
@@ -71,12 +85,18 @@ impl FromStr for Instruction {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self {
-            turn_direction: match s.chars().nth(0).ok_or(Error::ParseInstructionError("cannot get direction"))? {
+            turn_direction: match s
+                .chars()
+                .nth(0)
+                .ok_or(Error::ParseInstructionError("cannot get direction"))?
+            {
                 'L' => TurnDirection::Left,
                 'R' => TurnDirection::Right,
-                _ => return Err(Error::ParseInstructionError("invalid direction"))
+                _ => return Err(Error::ParseInstructionError("invalid direction")),
             },
-            walk_blocks: s[1..].parse().or(Err(Error::ParseInstructionError("invalid walk_blocks")))?,
+            walk_blocks: s[1..]
+                .parse()
+                .or(Err(Error::ParseInstructionError("invalid walk_blocks")))?,
         })
     }
 }
@@ -93,20 +113,20 @@ impl FacingDirection {
         match self {
             FacingDirection::North => match direction {
                 TurnDirection::Left => Self::West,
-                TurnDirection::Right => Self::East
-            }
+                TurnDirection::Right => Self::East,
+            },
             FacingDirection::South => match direction {
                 TurnDirection::Left => Self::East,
-                TurnDirection::Right => Self::West
-            }
+                TurnDirection::Right => Self::West,
+            },
             FacingDirection::East => match direction {
                 TurnDirection::Left => Self::North,
-                TurnDirection::Right => Self::South
-            }
+                TurnDirection::Right => Self::South,
+            },
             FacingDirection::West => match direction {
                 TurnDirection::Left => Self::South,
-                TurnDirection::Right => Self::North
-            }
+                TurnDirection::Right => Self::North,
+            },
         }
     }
 }
@@ -120,19 +140,15 @@ struct Coord {
 impl Coord {
     fn get_axis(&mut self, direction: &FacingDirection) -> &mut i32 {
         match direction {
-            FacingDirection::North | FacingDirection::South => {
-                &mut self.y
-            }
-            FacingDirection::East | FacingDirection::West => {
-                &mut self.x
-            }
+            FacingDirection::North | FacingDirection::South => &mut self.y,
+            FacingDirection::East | FacingDirection::West => &mut self.x,
         }
     }
     pub(crate) fn get_next(&self, direction: &FacingDirection, blocks: i32) -> Vec<Self> {
         let mut result = self.clone();
         let sign: i32 = match direction {
             FacingDirection::North | FacingDirection::East => 1,
-            FacingDirection::South | FacingDirection::West => -1
+            FacingDirection::South | FacingDirection::West => -1,
         };
 
         let mut results: Vec<Self> = Default::default();
@@ -144,8 +160,7 @@ impl Coord {
         results
     }
     pub(crate) fn get_manhattan_distance(&self, other: &Self) -> i32 {
-        (self.x - other.x).abs() +
-            (self.y - other.y).abs()
+        (self.x - other.x).abs() + (self.y - other.y).abs()
     }
 }
 

@@ -12,13 +12,23 @@ aaa[kek]eke
 zazbz[bzb]cdb";
     let _input = _get_input();
 
-    let addresses: Vec<IpV7> = _input.lines().map(|line| line.parse()).collect::<Result<_, _>>().unwrap();
+    let addresses: Vec<IpV7> = _input
+        .lines()
+        .map(|line| line.parse())
+        .collect::<Result<_, _>>()
+        .unwrap();
 
-    let support_tls = addresses.iter().filter(|address| address.supports_tls()).count();
+    let support_tls = addresses
+        .iter()
+        .filter(|address| address.supports_tls())
+        .count();
     println!("{} addresses support tls", support_tls);
     println!();
 
-    let support_ssl = addresses.iter().filter(|address| address.supports_ssl()).count();
+    let support_ssl = addresses
+        .iter()
+        .filter(|address| address.supports_ssl())
+        .count();
     println!("{} addresses support ssl", support_ssl);
 }
 
@@ -29,23 +39,33 @@ struct Sequence {
 
 impl Debug for Sequence {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}{}{}", if self.is_inside_square_brackets { "[" } else { "" },
-               self.value.iter().collect::<String>(),
-               if self.is_inside_square_brackets { "]" } else { "" })
+        write!(
+            f,
+            "{}{}{}",
+            if self.is_inside_square_brackets {
+                "["
+            } else {
+                ""
+            },
+            self.value.iter().collect::<String>(),
+            if self.is_inside_square_brackets {
+                "]"
+            } else {
+                ""
+            }
+        )
     }
 }
 
 impl Sequence {
     pub(crate) fn is_abba(&self) -> bool {
-        self.value.windows(4)
-            .any(|c| {
-                c[0] != c[1] &&
-                    c[0] == c[3] &&
-                    c[1] == c[2]
-            })
+        self.value
+            .windows(4)
+            .any(|c| c[0] != c[1] && c[0] == c[3] && c[1] == c[2])
     }
     pub(crate) fn get_abas(&self) -> Vec<Aba> {
-        self.value.windows(3)
+        self.value
+            .windows(3)
             .filter_map(|c| Aba::try_from(c))
             .collect()
     }
@@ -61,9 +81,7 @@ impl Aba {
         self.a == other.b && self.b == other.a
     }
     pub(crate) fn try_from(chars: &[char]) -> Option<Self> {
-        if chars.len() == 3 &&
-            chars[0] != chars[1] &&
-            chars[0] == chars[2] {
+        if chars.len() == 3 && chars[0] != chars[1] && chars[0] == chars[2] {
             Some(Self {
                 a: chars[0],
                 b: chars[1],
@@ -78,7 +96,14 @@ struct IpV7(Vec<Sequence>);
 
 impl Debug for IpV7 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.iter().map(|seq| format!("{:?}", seq)).collect::<String>())
+        write!(
+            f,
+            "{}",
+            self.0
+                .iter()
+                .map(|seq| format!("{:?}", seq))
+                .collect::<String>()
+        )
     }
 }
 
@@ -101,14 +126,22 @@ impl IpV7 {
         any
     }
     pub(crate) fn supports_ssl(&self) -> bool {
-        let super_net_abas: Vec<_> = self.0.iter().filter(|seq| !seq.is_inside_square_brackets)
-            .flat_map(|seq| seq.get_abas()).collect();
-        let hyper_net_abas: Vec<_> = self.0.iter().filter(|seq| seq.is_inside_square_brackets)
-            .flat_map(|seq| seq.get_abas()).collect();
+        let super_net_abas: Vec<_> = self
+            .0
+            .iter()
+            .filter(|seq| !seq.is_inside_square_brackets)
+            .flat_map(|seq| seq.get_abas())
+            .collect();
+        let hyper_net_abas: Vec<_> = self
+            .0
+            .iter()
+            .filter(|seq| seq.is_inside_square_brackets)
+            .flat_map(|seq| seq.get_abas())
+            .collect();
         let result = super_net_abas.into_iter().any(|super_aba| {
-            hyper_net_abas.iter().any(|hyper_aba| {
-                super_aba.is_complement_of(hyper_aba)
-            })
+            hyper_net_abas
+                .iter()
+                .any(|hyper_aba| super_aba.is_complement_of(hyper_aba))
         });
 
         if result {
@@ -124,11 +157,7 @@ impl FromStr for IpV7 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut sequences: Vec<Sequence> = Default::default();
 
-        let mut i = if s.starts_with('[') {
-            1usize
-        } else {
-            0usize
-        };
+        let mut i = if s.starts_with('[') { 1usize } else { 0usize };
         for s in s.split(&['[', ']']) {
             i += 1;
             sequences.push(Sequence {

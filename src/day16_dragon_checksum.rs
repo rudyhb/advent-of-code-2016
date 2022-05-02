@@ -1,6 +1,6 @@
+use log::*;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-use log::*;
 
 pub(crate) fn run() {
     let _input = "10000";
@@ -40,13 +40,7 @@ impl Data {
         let mut result = Vec::with_capacity(self.0.len() / 2);
         for i in 0..self.0.len() / 2 {
             let (i, j) = (i * 2, i * 2 + 1);
-            result.push(
-                if self.0[i] == self.0[j] {
-                    true
-                } else {
-                    false
-                }
-            );
+            result.push(if self.0[i] == self.0[j] { true } else { false });
         }
         let result = Self(result);
         if result.0.len() % 2 == 0 {
@@ -60,7 +54,14 @@ impl Data {
 
 impl Display for Data {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.iter().map(|&i| if i { '1' } else { '0' }).collect::<String>())
+        write!(
+            f,
+            "{}",
+            self.0
+                .iter()
+                .map(|&i| if i { '1' } else { '0' })
+                .collect::<String>()
+        )
     }
 }
 
@@ -68,6 +69,10 @@ impl FromStr for Data {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(s.chars().map(|c| if c == '0' { false } else { true }).collect()))
+        Ok(Self(
+            s.chars()
+                .map(|c| if c == '0' { false } else { true })
+                .collect(),
+        ))
     }
 }
