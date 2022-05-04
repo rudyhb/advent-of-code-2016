@@ -24,6 +24,7 @@ mod day21_scrambled_letters_and_hash;
 mod day22_grid_computing;
 mod day23_safe_cracking;
 mod day24_air_duct_spelunking;
+mod day25_clock_signal;
 
 fn main() {
     env_logger::init();
@@ -31,7 +32,7 @@ fn main() {
     let day: usize = if let Some(arg1) = std::env::args().nth(1) {
         arg1.parse().expect("argument should be an integer")
     } else {
-        24
+        25
     };
     println!("running day {}\n", day);
     match day {
@@ -59,6 +60,7 @@ fn main() {
         22 => day22_grid_computing::run(),
         23 => day23_safe_cracking::run(),
         24 => day24_air_duct_spelunking::run(),
+        25 => day25_clock_signal::run(),
         _ => panic!("day {} not found", day),
     }
 }

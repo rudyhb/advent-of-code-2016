@@ -26,6 +26,7 @@ dec a";
 pub(crate) struct Computer<TInstruction: Instruction> {
     registers: HashMap<Register, i32>,
     phantom_parameter: PhantomData<TInstruction>,
+    pub(crate) output: Vec<i32>,
 }
 
 impl<TInstruction: Instruction> Computer<TInstruction> {
@@ -33,6 +34,7 @@ impl<TInstruction: Instruction> Computer<TInstruction> {
         Self {
             registers: Default::default(),
             phantom_parameter: PhantomData,
+            output: Default::default(),
         }
     }
     pub(crate) fn get_value(&self, rov: &RegisterOrValue) -> i32 {
@@ -45,7 +47,11 @@ impl<TInstruction: Instruction> Computer<TInstruction> {
         let val = self.registers.entry(*r).or_default();
         *val = func(*val);
     }
-    pub(crate) fn run(&mut self, mut instructions: Vec<TInstruction>) {
+    pub(crate) fn run_while(
+        &mut self,
+        mut instructions: Vec<TInstruction>,
+        condition: &dyn Fn(&Self) -> bool,
+    ) {
         let mut i = 0;
         let mut ran = 0usize;
         while i < instructions.len() {
@@ -54,11 +60,26 @@ impl<TInstruction: Instruction> Computer<TInstruction> {
             if let Some((register, update)) = result.update_register {
                 self.update(register, update);
             }
+            if let Some((a, b, update)) = result.update_register_pair {
+                let (val_a, val_b) = update(
+                    self.registers.get(a).copied().unwrap_or_default(),
+                    self.registers.get(b).copied().unwrap_or_default(),
+                );
+                self.update(a, |_| val_a);
+                self.update(b, |_| val_b);
+            }
             let next_instruction = if let Some(jump) = result.jump {
                 (i as i32 + self.get_value(&jump)) as usize
             } else {
                 i + 1
             };
+            if let Some(output) = result.output {
+                let output = self.get_value(&output);
+                self.output.push(output);
+            }
+            if result.log_state {
+                debug!("{:?} -> {:?}", instructions[i], self.registers);
+            }
             if let Some(toggle) = result.toggle {
                 let j = (i as i32 + self.get_value(&toggle)) as usize;
                 if j < instructions.len() {
@@ -69,9 +90,21 @@ impl<TInstruction: Instruction> Computer<TInstruction> {
             i = next_instruction;
             ran += 1;
             if ran % 1_000_000 == 0 {
-                debug!("ran {} total instructions, now at {}, a={}", ran, i, self.value_at(&Register::A));
+                debug!(
+                    "ran {} total instructions, now at {}, a={}",
+                    ran,
+                    i,
+                    self.value_at(&Register::A)
+                );
+            }
+
+            if !condition(&self) {
+                break;
             }
         }
+    }
+    pub(crate) fn run(&mut self, instructions: Vec<TInstruction>) {
+        self.run_while(instructions, &(|_| true))
     }
     pub(crate) fn value_at(&self, register: &Register) -> i32 {
         *self.registers.get(register).unwrap()
@@ -87,6 +120,21 @@ pub(crate) enum Register {
     B,
     C,
     D,
+}
+
+impl Debug for Register {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Register::A => 'A',
+                Register::B => 'B',
+                Register::C => 'C',
+                Register::D => 'D',
+            }
+        )
+    }
 }
 
 impl FromStr for Register {
@@ -146,7 +194,7 @@ impl FromStr for RegisterOrValue {
     }
 }
 
-pub(crate) trait Instruction {
+pub(crate) trait Instruction: Debug {
     fn run<TRetriever: Fn(&RegisterOrValue) -> i32>(
         &self,
         retrieve_fun: TRetriever,
@@ -156,41 +204,89 @@ pub(crate) trait Instruction {
 
 pub(crate) struct InstructionResult<'a> {
     pub(crate) update_register: Option<(&'a Register, Box<dyn Fn(i32) -> i32>)>,
+    pub(crate) update_register_pair: Option<(
+        &'a Register,
+        &'a Register,
+        Box<dyn Fn(i32, i32) -> (i32, i32)>,
+    )>,
     pub(crate) jump: Option<RegisterOrValue>,
     pub(crate) toggle: Option<RegisterOrValue>,
+    pub(crate) output: Option<RegisterOrValue>,
+    pub(crate) log_state: bool,
 }
 
 impl<'a> InstructionResult<'a> {
     pub(crate) fn update(register: &'a Register, func: Box<dyn Fn(i32) -> i32>) -> Self {
         Self {
             update_register: Some((register, func)),
+            update_register_pair: None,
             jump: None,
             toggle: None,
+            output: None,
+            log_state: false,
+        }
+    }
+    pub(crate) fn update_pair(
+        a: &'a Register,
+        b: &'a Register,
+        func: Box<dyn Fn(i32, i32) -> (i32, i32)>,
+    ) -> Self {
+        Self {
+            update_register: None,
+            update_register_pair: Some((a, b, func)),
+            jump: None,
+            toggle: None,
+            output: None,
+            log_state: false,
         }
     }
     pub(crate) fn jump(rov: RegisterOrValue) -> Self {
         Self {
             update_register: None,
+            update_register_pair: None,
             jump: Some(rov),
             toggle: None,
+            output: None,
+            log_state: false,
         }
     }
     pub(crate) fn toggle(rov: RegisterOrValue) -> Self {
         Self {
             update_register: None,
+            update_register_pair: None,
             jump: None,
             toggle: Some(rov),
+            output: None,
+            log_state: false,
+        }
+    }
+    pub(crate) fn output(rov: RegisterOrValue) -> Self {
+        Self {
+            update_register: None,
+            update_register_pair: None,
+            jump: None,
+            toggle: None,
+            output: Some(rov),
+            log_state: false,
         }
     }
     pub(crate) fn do_nothing() -> Self {
         Self {
             update_register: None,
+            update_register_pair: None,
             jump: None,
             toggle: None,
+            output: None,
+            log_state: false,
         }
+    }
+    pub(crate) fn _and_log_state(mut self) -> Self {
+        self.log_state = true;
+        self
     }
 }
 
+#[derive(Debug)]
 enum LeonardoInstruction {
     Copy(RegisterOrValue, Register),
     Increase(Register),
