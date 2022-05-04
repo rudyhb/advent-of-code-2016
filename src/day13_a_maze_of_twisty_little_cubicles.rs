@@ -6,7 +6,9 @@ pub(crate) fn run() {
     // let end = Coord { x: 7, y: 4 };
     let end = Coord { x: 31, y: 39 };
 
-    let solution = a_star_search(start, &end, get_successors, distance_function, None).unwrap();
+    let solution = a_star_search(start, &end, get_successors, distance_function, None)
+        .unwrap()
+        .shortest_path;
 
     Maze::print(&solution);
     println!(

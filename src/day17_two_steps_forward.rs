@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use std::collections::HashSet;
-use utils::a_star::{a_star_search, AStarNode, CurrentNodeDetails, Successor};
+use utils::a_star::{a_star_search, AStarNode, AStarOptions, CurrentNodeDetails, Successor};
 
 pub(crate) fn run() {
     let _input = "ihgpwlah";
@@ -18,7 +18,14 @@ pub(crate) fn run() {
         history: vec![],
         passcode: _input,
     };
-    let result = a_star_search(start, &end, get_successors, distance_function, None).unwrap();
+    let options =
+        AStarOptions::default().with_ending_condition(Box::new(|current: &Path, end: &Path| {
+            current.current_position == end.current_position
+        }));
+    let options = Some(&options);
+    let result = a_star_search(start, &end, get_successors, distance_function, options)
+        .unwrap()
+        .shortest_path;
     println!(
         "the shortest path is {}",
         result
@@ -109,7 +116,7 @@ fn distance_function(details: CurrentNodeDetails<Path>) -> i32 {
         .get_manhattan_distance(&details.target_node.current_position) as i32
 }
 
-#[derive(Hash, Eq, Ord, PartialOrd, Debug, Clone)]
+#[derive(Hash, Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]
 struct Path {
     passcode: &'static str,
     current_position: Coord,
@@ -159,19 +166,6 @@ enum Direction {
     Down,
     Left,
     Right,
-}
-
-impl PartialEq for Path {
-    fn eq(&self, other: &Self) -> bool {
-        if self.current_position != other.current_position {
-            return false;
-        }
-        // special case for end of maze
-        if self.current_position == *END_POSITION {
-            return true;
-        }
-        return self.history == other.history;
-    }
 }
 
 impl AStarNode for Path {}

@@ -37,7 +37,8 @@ The fourth floor contains nothing relevant.";
     println!("initial state:{}\n", building);
 
     let solution = a_star_search(building, &target, get_successors, distance_function, None)
-        .expect("no solution found");
+        .expect("no solution found")
+        .shortest_path;
     for (i, step) in solution.iter().enumerate().skip(1) {
         println!("step {}:{}\n", i, step);
     }
