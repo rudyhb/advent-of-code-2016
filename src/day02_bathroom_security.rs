@@ -20,7 +20,7 @@ UUUUD";
     );
 }
 
-fn obtain_code<T: 'static>(keypad: &mut dyn Keypad<T>, directions: &str) -> String {
+fn obtain_code<T>(keypad: &mut dyn Keypad<ValueType = T>, directions: &str) -> String {
     let directions: Vec<Vec<Direction>> = directions
         .split('\n')
         .map(|line| line.chars().map(|c| c.into()).collect())
@@ -31,20 +31,12 @@ fn obtain_code<T: 'static>(keypad: &mut dyn Keypad<T>, directions: &str) -> Stri
     keypad.get_code()
 }
 
-trait Keypad<T>
-where
-    Self: 'static,
-{
+trait Keypad {
+    type ValueType;
     fn get_code(&self) -> String;
     fn apply_direction(&mut self, direction: &Direction);
-    fn get_value(&self) -> T;
-    fn push_value(&mut self, value: T);
-}
-
-impl<T> dyn Keypad<T>
-where
-    Self: 'static,
-{
+    fn get_value(&self) -> Self::ValueType;
+    fn push_value(&mut self, value: Self::ValueType);
     fn go_to_next(&mut self, directions: &[Direction]) {
         for direction in directions {
             self.apply_direction(direction);
@@ -59,7 +51,9 @@ struct FancyKeypad {
     current: Coord,
 }
 
-impl Keypad<char> for FancyKeypad {
+impl Keypad for FancyKeypad {
+    type ValueType = char;
+
     fn get_code(&self) -> String {
         self.pressed.iter().copied().collect()
     }
@@ -118,7 +112,9 @@ impl FancyKeypad {
     }
 }
 
-impl Keypad<u8> for SimpleKeypad {
+impl Keypad for SimpleKeypad {
+    type ValueType = u8;
+
     fn get_code(&self) -> String {
         self.pressed
             .iter()
