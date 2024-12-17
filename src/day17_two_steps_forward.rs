@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use std::collections::HashSet;
-use utils::a_star::{a_star_search, AStarNode, AStarOptions, CurrentNodeDetails, Successor};
+use utils::a_star::{a_star_search, CurrentNodeDetails, Node, Successor};
 
 pub(crate) fn run() {
     let _input = "ihgpwlah";
@@ -18,14 +18,16 @@ pub(crate) fn run() {
         history: vec![],
         passcode: _input,
     };
-    let options =
-        AStarOptions::default().with_ending_condition(Box::new(|current: &Path, end: &Path| {
-            current.current_position == end.current_position
-        }));
-    let options = Some(&options);
-    let result = a_star_search(start, &end, get_successors, distance_function, options)
-        .unwrap()
-        .shortest_path;
+    let result = a_star_search(
+        start,
+        &end,
+        get_successors,
+        distance_function,
+        |left, right| left.current_position == right.current_position,
+        None,
+    )
+    .unwrap()
+    .shortest_path;
     println!(
         "the shortest path is {}",
         result
@@ -103,13 +105,13 @@ fn get_successors_internal(path: &Path) -> impl Iterator<Item = Path> + '_ {
     .map(|(_, _, dir)| path.moved(dir))
 }
 
-fn get_successors(path: &Path) -> Vec<Successor<Path>> {
+fn get_successors(path: &Path) -> Vec<Successor<Path, i32>> {
     get_successors_internal(path)
         .map(|p| Successor::new(p, 1))
         .collect()
 }
 
-fn distance_function(details: CurrentNodeDetails<Path>) -> i32 {
+fn distance_function(details: CurrentNodeDetails<Path, i32>) -> i32 {
     details
         .current_node
         .current_position
@@ -168,7 +170,7 @@ enum Direction {
     Right,
 }
 
-impl AStarNode for Path {}
+impl Node for Path {}
 
 #[derive(Clone, Hash, Eq, PartialEq, Ord, PartialOrd, Debug)]
 struct Coord {

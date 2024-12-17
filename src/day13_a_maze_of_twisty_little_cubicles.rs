@@ -6,9 +6,16 @@ pub(crate) fn run() {
     // let end = Coord { x: 7, y: 4 };
     let end = Coord { x: 31, y: 39 };
 
-    let solution = a_star_search(start, &end, get_successors, distance_function, None)
-        .unwrap()
-        .shortest_path;
+    let solution = a_star_search(
+        start,
+        &end,
+        get_successors,
+        distance_function,
+        |left, right| left == right,
+        None,
+    )
+    .unwrap()
+    .shortest_path;
 
     Maze::print(&solution);
     println!(
@@ -53,20 +60,20 @@ fn get_successors_internal(current: &Coord) -> Vec<Coord> {
         .collect()
 }
 
-fn get_successors(current: &Coord) -> Vec<Successor<Coord>> {
+fn get_successors(current: &Coord) -> Vec<Successor<Coord, i32>> {
     get_successors_internal(current)
         .into_iter()
         .map(|pos| Successor::new(pos, 1))
         .collect()
 }
 
-fn distance_function(details: CurrentNodeDetails<Coord>) -> i32 {
+fn distance_function(details: CurrentNodeDetails<Coord, i32>) -> i32 {
     details
         .current_node
         .manhattan_distance(&details.target_node) as i32
 }
 
-impl AStarNode for Coord {}
+impl Node for Coord {}
 
 struct Maze {}
 

@@ -36,9 +36,16 @@ The fourth floor contains nothing relevant.";
 
     println!("initial state:{}\n", building);
 
-    let solution = a_star_search(building, &target, get_successors, distance_function, None)
-        .expect("no solution found")
-        .shortest_path;
+    let solution = a_star_search(
+        building,
+        &target,
+        get_successors,
+        distance_function,
+        |left, right| left == right,
+        None,
+    )
+    .expect("no solution found")
+    .shortest_path;
     for (i, step) in solution.iter().enumerate().skip(1) {
         println!("step {}:{}\n", i, step);
     }
@@ -57,7 +64,7 @@ fn add_extra_items_on_first_floor(building: &mut Building, add: bool) {
     ])
 }
 
-impl AStarNode for Building {}
+impl Node for Building {}
 
 fn get_limited_items(from: &[Device]) -> Option<Vec<Device>> {
     if from.len() < 5 {
@@ -89,7 +96,7 @@ fn get_limited_items(from: &[Device]) -> Option<Vec<Device>> {
     )
 }
 
-fn get_successors(state: &Building) -> Vec<Successor<Building>> {
+fn get_successors(state: &Building) -> Vec<Successor<Building, i32>> {
     let mut items = &state.floors[state.elevator_floor];
     let limited_items = get_limited_items(items);
     if let Some(value) = &limited_items {
@@ -131,7 +138,7 @@ fn get_successors(state: &Building) -> Vec<Successor<Building>> {
         .collect()
 }
 
-fn distance_function(details: CurrentNodeDetails<Building>) -> i32 {
+fn distance_function(details: CurrentNodeDetails<Building, i32>) -> i32 {
     let n = details.current_node.floors.len();
     10 * (0..n - 1).fold(0i32, |distance, i| {
         let count = details.current_node.floors[i].len();

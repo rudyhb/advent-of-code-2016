@@ -4,7 +4,7 @@ use permutator::Permutation;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use utils::a_star::{a_star_search, AStarNode, AStarOptions, CurrentNodeDetails, Successor};
+use utils::a_star::{a_star_search, CurrentNodeDetails, Node, Options, Successor};
 
 pub(crate) fn run() {
     let _input = "###########
@@ -49,19 +49,20 @@ fn find_shortest_path_for(system: &DuctSystem, points: &[u32], return_to_origin:
 fn find_shortest_path_for_points(system: &DuctSystem, from: u32, to: u32) -> usize {
     let start = system.state.positions.get(&Position(from)).unwrap().clone();
     let end = system.state.positions.get(&Position(to)).unwrap();
-    let options = AStarOptions::default().with_no_logs();
+    let options = Options::default().with_no_logs();
     let results = a_star_search(
         start,
         end,
         |current: &Coord| get_successors(current, &system.duct),
         distance_function,
+        |left, right| left == right,
         Some(&options),
     )
     .unwrap();
     results.shortest_path_cost as usize
 }
 
-fn get_successors(current: &Coord, duct: &Duct) -> Vec<Successor<Coord>> {
+fn get_successors(current: &Coord, duct: &Duct) -> Vec<Successor<Coord, i32>> {
     let mut results = Vec::new();
     let mut push = |x: usize, y: usize| {
         results.push(Successor::new(Coord { x, y }, 1));
@@ -82,11 +83,11 @@ fn get_successors(current: &Coord, duct: &Duct) -> Vec<Successor<Coord>> {
     results
 }
 
-fn distance_function(details: CurrentNodeDetails<Coord>) -> i32 {
+fn distance_function(details: CurrentNodeDetails<Coord, i32>) -> i32 {
     details.current_node.manhattan_distance(details.target_node) as i32
 }
 
-impl AStarNode for Coord {}
+impl Node for Coord {}
 
 struct Duct(Vec<Vec<Space>>);
 

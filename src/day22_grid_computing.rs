@@ -4,7 +4,8 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
-use utils::a_star::{a_star_search, AStarNode, AStarOptions, CurrentNodeDetails, Successor};
+use utils::a_star::Node as AStarNode;
+use utils::a_star::{a_star_search, CurrentNodeDetails, Options, Successor};
 
 pub(crate) fn run() {
     let _input = "root@ebhq-gridcenter# df -h
@@ -93,7 +94,7 @@ fn solve_graphically(grid: &Grid) {
 }
 
 #[allow(unused)]
-fn get_successors_v2(current: &Grid) -> Vec<Successor<Grid>> {
+fn get_successors_v2(current: &Grid) -> Vec<Successor<Grid, i32>> {
     const ITER_LIMIT: usize = 1_000;
     let current_target = &current.target_data_location;
     current_target
@@ -101,23 +102,21 @@ fn get_successors_v2(current: &Grid) -> Vec<Successor<Grid>> {
         .into_iter()
         .filter_map(|next_target| {
             let next_target_clone = next_target.clone();
-            let options = AStarOptions::default()
+            let options = Options::default()
                 .with_no_logs()
-                .with_iteration_limit(ITER_LIMIT)
-                .with_ending_condition(Box::new(move |current: &Grid, _: &Grid| {
-                    current.target_data_location == next_target_clone
-                }));
+                .with_iteration_limit(ITER_LIMIT);
             let next_grid = current.clone();
             let intermediate_result = a_star_search(
                 next_grid,
                 &Default::default(),
                 get_successors,
-                |details: CurrentNodeDetails<Grid>| -> i32 {
+                |details: CurrentNodeDetails<Grid, i32>| -> i32 {
                     details
                         .current_node
                         .target_data_location
                         .manhattan_distance(&next_target) as i32
                 },
+                move |left, right| left.target_data_location == next_target_clone,
                 Some(&options),
             );
             match intermediate_result {
@@ -139,7 +138,7 @@ fn get_successors_v2(current: &Grid) -> Vec<Successor<Grid>> {
 }
 
 #[allow(unused)]
-fn get_successors(current: &Grid) -> Vec<Successor<Grid>> {
+fn get_successors(current: &Grid) -> Vec<Successor<Grid, i32>> {
     current
         .grid
         .keys()
@@ -157,7 +156,7 @@ fn get_successors(current: &Grid) -> Vec<Successor<Grid>> {
         .collect()
 }
 
-fn _distance_function(details: CurrentNodeDetails<Grid>) -> i32 {
+fn _distance_function(details: CurrentNodeDetails<Grid, i32>) -> i32 {
     const FIRST_COORD: &Coord = &Coord { x: 0, y: 0 };
     details
         .current_node
@@ -165,10 +164,10 @@ fn _distance_function(details: CurrentNodeDetails<Grid>) -> i32 {
         .manhattan_distance(FIRST_COORD) as i32
 }
 
-fn _distance_function_v2(details: CurrentNodeDetails<Grid>) -> i32 {
+fn _distance_function_v2(details: CurrentNodeDetails<Grid, i32>) -> i32 {
     let grid = details.current_node;
     const FIRST_COORD: &Coord = &Coord { x: 0, y: 0 };
-    let options = AStarOptions::default().with_no_logs();
+    let options = Options::default().with_no_logs();
     let options = Some(&options);
 
     let start = details.current_node.target_data_location.clone();
@@ -185,9 +184,10 @@ fn _distance_function_v2(details: CurrentNodeDetails<Grid>) -> i32 {
                 })
                 .collect()
         },
-        |current: CurrentNodeDetails<Coord>| {
+        |current: CurrentNodeDetails<Coord, i32>| {
             current.current_node.manhattan_distance(FIRST_COORD) as i32
         },
+        |left, right| left == right,
         options,
     )
     .unwrap()
