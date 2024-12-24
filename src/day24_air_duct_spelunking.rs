@@ -52,10 +52,9 @@ fn find_shortest_path_for_points(system: &DuctSystem, from: u32, to: u32) -> usi
     let options = Options::default().with_no_logs();
     let results = a_star_search(
         start,
-        end,
         |current: &Coord| get_successors(current, &system.duct),
-        distance_function,
-        |left, right| left == right,
+        |current| distance_function(current, end),
+        |left| left == end,
         Some(&options),
     )
     .unwrap();
@@ -83,8 +82,8 @@ fn get_successors(current: &Coord, duct: &Duct) -> Vec<Successor<Coord, i32>> {
     results
 }
 
-fn distance_function(details: CurrentNodeDetails<Coord, i32>) -> i32 {
-    details.current_node.manhattan_distance(details.target_node) as i32
+fn distance_function(details: CurrentNodeDetails<Coord, i32>, end: &Coord) -> i32 {
+    details.current_node.manhattan_distance(end) as i32
 }
 
 impl Node for Coord {}

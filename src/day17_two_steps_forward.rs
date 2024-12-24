@@ -20,10 +20,9 @@ pub(crate) fn run() {
     };
     let result = a_star_search(
         start,
-        &end,
         get_successors,
-        distance_function,
-        |left, right| left.current_position == right.current_position,
+        |current| distance_function(current, &end),
+        |left| left.current_position == end.current_position,
         None,
     )
     .unwrap()
@@ -111,11 +110,11 @@ fn get_successors(path: &Path) -> Vec<Successor<Path, i32>> {
         .collect()
 }
 
-fn distance_function(details: CurrentNodeDetails<Path, i32>) -> i32 {
+fn distance_function(details: CurrentNodeDetails<Path, i32>, end: &Path) -> i32 {
     details
         .current_node
         .current_position
-        .get_manhattan_distance(&details.target_node.current_position) as i32
+        .get_manhattan_distance(&end.current_position) as i32
 }
 
 #[derive(Hash, Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]

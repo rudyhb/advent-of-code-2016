@@ -38,10 +38,9 @@ The fourth floor contains nothing relevant.";
 
     let solution = a_star_search(
         building,
-        &target,
         get_successors,
         distance_function,
-        |left, right| left == right,
+        |left| left == &target,
         None,
     )
     .expect("no solution found")

@@ -108,7 +108,6 @@ fn get_successors_v2(current: &Grid) -> Vec<Successor<Grid, i32>> {
             let next_grid = current.clone();
             let intermediate_result = a_star_search(
                 next_grid,
-                &Default::default(),
                 get_successors,
                 |details: CurrentNodeDetails<Grid, i32>| -> i32 {
                     details
@@ -116,7 +115,7 @@ fn get_successors_v2(current: &Grid) -> Vec<Successor<Grid, i32>> {
                         .target_data_location
                         .manhattan_distance(&next_target) as i32
                 },
-                move |left, right| left.target_data_location == next_target_clone,
+                move |left| left.target_data_location == next_target_clone,
                 Some(&options),
             );
             match intermediate_result {
@@ -173,7 +172,6 @@ fn _distance_function_v2(details: CurrentNodeDetails<Grid, i32>) -> i32 {
     let start = details.current_node.target_data_location.clone();
     let least_bit_path = a_star_search(
         start,
-        FIRST_COORD,
         |current: &Coord| {
             current
                 .get_neighbors(grid.max_x, grid.max_y)
@@ -187,7 +185,7 @@ fn _distance_function_v2(details: CurrentNodeDetails<Grid, i32>) -> i32 {
         |current: CurrentNodeDetails<Coord, i32>| {
             current.current_node.manhattan_distance(FIRST_COORD) as i32
         },
-        |left, right| left == right,
+        |left| left == FIRST_COORD,
         options,
     )
     .unwrap()

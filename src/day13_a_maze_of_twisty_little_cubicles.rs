@@ -8,10 +8,9 @@ pub(crate) fn run() {
 
     let solution = a_star_search(
         start,
-        &end,
         get_successors,
-        distance_function,
-        |left, right| left == right,
+        |current| distance_function(current, &end),
+        |left| left == &end,
         None,
     )
     .unwrap()
@@ -67,10 +66,10 @@ fn get_successors(current: &Coord) -> Vec<Successor<Coord, i32>> {
         .collect()
 }
 
-fn distance_function(details: CurrentNodeDetails<Coord, i32>) -> i32 {
+fn distance_function(details: CurrentNodeDetails<Coord, i32>, end: &Coord) -> i32 {
     details
         .current_node
-        .manhattan_distance(&details.target_node) as i32
+        .manhattan_distance(end) as i32
 }
 
 impl Node for Coord {}
